@@ -6,7 +6,7 @@ import (
 
 func (m model) View() string {
 	// The header
-	s := "What should we buy at the market?\n\n"
+	s := "What do you want to do?\n\n"
 
 	// Iterate over our choices
 	for i, cmd := range m.cmds {
@@ -18,7 +18,7 @@ func (m model) View() string {
 		}
 
 		// Render the row
-		s += fmt.Sprintf("%s [%s]\n", cursor, cmd)
+		s += fmt.Sprintf("%s [%s]\n", cursor, cmd.name)
 	}
 
 	// The footer

@@ -1,6 +1,8 @@
 package root
 
 import (
+	"log"
+
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -32,12 +34,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// The "enter" key and the spacebar (a literal space) toggle
 		// the selected state for the item that the cursor is pointing at.
 		case "enter", " ":
-			// _, ok := m.selected[m.cursor]
-			// if ok {
-			// 	delete(m.selected, m.cursor)
-			// } else {
-			// 	m.selected[m.cursor] = struct{}{}
-			// }
+			cmd, err := m.cmds[m.cursor].run()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			m.output = outputMsg(cmd)
+
+			return m, nil
 		}
 	}
 
