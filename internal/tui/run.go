@@ -1,15 +1,14 @@
-package internal
+package tui
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/ElitistNoob/pacdude/internal/tui/root"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func Run() {
-	p := tea.NewProgram(root.InitialModel())
+	p := tea.NewProgram(newTuiModel())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)
