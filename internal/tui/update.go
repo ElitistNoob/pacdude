@@ -8,6 +8,12 @@ import (
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		updated, cmd := m.current.Update(msg)
+		m.current = updated
+		return m, cmd
 
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -18,18 +24,6 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.current, m.previous = m.previous, m.current
 			}
 			return m, nil
-		case "up", "k":
-			if m.cursor > 0 {
-				m.cursor--
-			} else {
-				m.cursor = len(m.choices) - 1
-			}
-		case "down", "j":
-			if m.cursor < len(m.choices)-1 {
-				m.cursor++
-			} else {
-				m.cursor = 0
-			}
 		}
 
 		updated, cmd := m.current.Update(msg)
@@ -38,14 +32,18 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case messages.GoToPkgs:
 		m.previous = m.current
-		m.current = pkgs.NewPkgsModel()
-		return m, pkgs.ExecWrapper(msg.Args)
+		p := pkgs.NewPkgsModel()
 
-	case messages.PkgOutput:
-		updated, cmd := m.current.Update(msg)
-		m.current = updated
-		return m, cmd
+		updatedModel, _ := p.Update(tea.WindowSizeMsg{
+			Width:  m.width,
+			Height: m.height,
+		})
+		m.current = updatedModel
+
+		return m, pkgs.ExecWrapper(msg.Args)
 	}
 
-	return m, nil
+	updated, cmd := m.current.Update(msg)
+	m.current = updated
+	return m, cmd
 }

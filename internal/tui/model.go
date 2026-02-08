@@ -11,10 +11,10 @@ type errorMsg struct{ err error }
 type model struct {
 	current    tea.Model
 	previous   tea.Model
+	width      int
+	height     int
 	lastOutput outputMsg
 	lastErr    errorMsg
-	cursor     int
-	choices    []string
 }
 
 func newTuiModel() *model {
@@ -23,8 +23,6 @@ func newTuiModel() *model {
 		previous:   nil,
 		lastOutput: "",
 		lastErr:    errorMsg{},
-		choices:    []string{},
-		cursor:     0,
 	}
 }
 
