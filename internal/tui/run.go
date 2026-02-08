@@ -8,7 +8,11 @@ import (
 )
 
 func Run() {
-	p := tea.NewProgram(newTuiModel())
+	p := tea.NewProgram(newTuiModel(),
+		tea.WithAltScreen(),
+		tea.WithMouseCellMotion(),
+	)
+
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)
