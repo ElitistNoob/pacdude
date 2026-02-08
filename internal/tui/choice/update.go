@@ -6,8 +6,9 @@ import (
 )
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
+	var args []string
 
+	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "up", "k":
@@ -21,12 +22,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "enter", " ":
 			selectedChoice := m.choices[m.cursor]
-			var args []string
 			switch selectedChoice {
 			case "Installed Packages":
 				args = []string{"-Qs"}
-			case "Search Packages":
-				args = []string{"-Ss", "steam"}
 			}
 			return m, messages.MsgHandler(args)
 		}

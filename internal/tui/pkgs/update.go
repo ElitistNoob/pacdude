@@ -2,6 +2,7 @@ package pkgs
 
 import (
 	"github.com/ElitistNoob/pacdude/internal/tui/messages"
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -9,6 +10,28 @@ import (
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
+	var args []string
+
+	if m.showModal {
+		switch msg := msg.(type) {
+		case tea.KeyMsg:
+			switch msg.String() {
+			case "enter":
+				m.result = m.textInput.Value()
+				args = []string{"-Ss", m.result}
+				m.showModal = false
+				m.textInput.Blur()
+				return m, messages.MsgHandler(args)
+			case "esc":
+				m.showModal = false
+				m.textInput.Blur()
+				return m, nil
+			}
+		}
+
+		m.textInput, cmd = m.textInput.Update(msg)
+		return m, cmd
+	}
 	switch msg := msg.(type) {
 
 	case tea.KeyMsg:
@@ -21,6 +44,11 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.cursor < len(m.choices)-1 {
 				m.cursor++
 			}
+		case "/":
+			m.showModal = true
+			m.textInput.Focus()
+			m.textInput.SetValue("")
+			return m, textinput.Blink
 		}
 
 		m.viewport.SetContent(m.renderContent())

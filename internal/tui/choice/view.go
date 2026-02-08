@@ -7,6 +7,7 @@ import (
 
 func (m model) View() string {
 	return renderView(m)
+
 }
 
 func renderView(m model) string {

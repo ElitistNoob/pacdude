@@ -1,15 +1,21 @@
 package pkgs
 
 import (
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type model struct {
-	choices  []pkg
-	cursor   int
-	viewport viewport.Model
-	ready    bool
+	choices   []pkg
+	cursor    int
+	viewport  viewport.Model
+	ready     bool
+	textInput textinput.Model
+	showModal bool
+	result    string
+	width     int
+	height    int
 }
 
 type pkg struct {
@@ -17,10 +23,16 @@ type pkg struct {
 }
 
 func NewPkgsModel() *model {
+	ti := textinput.New()
+	ti.Placeholder = "Search Package"
+	ti.Focus()
+	ti.CharLimit = 156
+	ti.Width = 40
 	return &model{
-		choices:  []pkg{},
-		cursor:   0,
-		viewport: viewport.Model{},
+		choices:   []pkg{},
+		cursor:    0,
+		viewport:  viewport.Model{},
+		textInput: ti,
 	}
 }
 

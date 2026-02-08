@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ElitistNoob/pacdude/internal/tui/styles"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -25,23 +26,33 @@ func (m model) View() string {
 	if !m.ready {
 		return "\n  Initializing..."
 	}
-	return fmt.Sprintf("%s\n%s\n%s",
+	background := fmt.Sprintf("%s\n%s\n%s\n",
 		m.headerView(),
 		m.viewport.View(),
 		m.footerView(),
 	)
-	// return fmt.Sprintf("Cursor: %d | YOffset: %d\n%s", m.cursor, m.viewport.YOffset, m.viewport.View())
+
+	if !m.showModal {
+		return background
+	}
+
+	modal := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		Padding(0, 2).
+		Render(m.textInput.View())
+
+	return background + modal
 }
 
 func (m model) renderContent() string {
 	lines := make([]string, 0, len(m.choices))
 	for i, pkg := range m.choices {
-		cursor := " "
+		cursor := "[ ]"
 		if m.cursor == i {
-			cursor = ">"
+			cursor = styles.CursorStyle.Render("[>]")
 		}
 
-		lines = append(lines, fmt.Sprintf("[%s] %s\n%s\n", cursor, pkg.title, pkg.desc))
+		lines = append(lines, fmt.Sprintf("%s %s\n%s\n", cursor, pkg.title, pkg.desc))
 	}
 
 	return strings.Join(lines, "\n")
