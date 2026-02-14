@@ -1,7 +1,7 @@
 package choice
 
 import (
-	"github.com/ElitistNoob/pacdude/internal/tui/messages"
+	hdlr "github.com/ElitistNoob/pacdude/internal/handlers"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -26,7 +26,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "Installed Packages":
 				args = []string{"-Qs"}
 			}
-			return m, messages.MsgHandler(args)
+			return m, hdlr.HandleShowPackageScreen(args)
 		}
 	}
 

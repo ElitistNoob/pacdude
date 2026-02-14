@@ -1,21 +1,21 @@
 package pkgs
 
 import (
+	msg "github.com/ElitistNoob/pacdude/internal/tui/messages"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type model struct {
+	ready     bool
 	choices   []pkg
 	cursor    int
-	viewport  viewport.Model
-	ready     bool
-	textInput textinput.Model
+	selection string
 	showModal bool
+	textInput textinput.Model
 	result    string
-	width     int
-	height    int
+	viewport  viewport.Model
 }
 
 type pkg struct {
@@ -56,5 +56,17 @@ func (m *model) syncViewportScroll() {
 		m.viewport.SetYOffset(topOfItem)
 	} else if bottomOfItem > bottom {
 		m.viewport.SetYOffset(bottomOfItem - m.viewport.Height + 1)
+	}
+}
+
+func (m *model) handleInstallPkgMsg(args []string) tea.Cmd {
+	return func() tea.Msg {
+		return msg.InstallPkgMsg{Args: args}
+	}
+}
+
+func (m *model) handleExecDoneMsg() tea.Cmd {
+	return func() tea.Msg {
+		return msg.ExecDoneMsg{}
 	}
 }

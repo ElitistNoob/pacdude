@@ -1,21 +1,22 @@
 package messages
 
-import (
-	tea "github.com/charmbracelet/bubbletea"
-)
-
+// Core Msg
 type OutputMsg []byte
 type ErrMsg struct{ Err error }
 
-type GoToPkgs struct{ Args []string }
-
+// Package screen related msgs
+type GoToPkgsMsg struct{ Args []string }
 type PkgOutput struct {
 	Output OutputMsg
 	Err    ErrMsg
 }
 
-func MsgHandler(args []string) tea.Cmd {
-	return func() tea.Msg {
-		return GoToPkgs{Args: args}
-	}
+// Install Process related msgs
+type InstallPkgMsg struct{ Args []string }
+type InstallResultMsg struct {
+	Output OutputMsg
+	Err    ErrMsg
 }
+
+// State messages
+type ExecDoneMsg struct{}

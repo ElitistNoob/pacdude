@@ -8,6 +8,8 @@ import (
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+
+	// Window Resize Messages
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
@@ -15,6 +17,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.current = updated
 		return m, cmd
 
+	// Keypress Messages
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
@@ -24,13 +27,20 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.current, m.previous = m.previous, m.current
 			}
 			return m, nil
+		case "y":
+			m.state = stateInstalling
+			return m, m.installPkgCmd(m.selectedPkg)
+		case "n":
+			m.state = stateReady
+			return m, nil
 		}
 
 		updated, cmd := m.current.Update(msg)
 		m.current = updated
 		return m, cmd
 
-	case messages.GoToPkgs:
+	// Event Trigger Messages
+	case messages.GoToPkgsMsg:
 		m.previous = m.current
 		p := pkgs.NewPkgsModel()
 
@@ -39,8 +49,20 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			Height: m.height,
 		})
 		m.current = updatedModel
-
-		return m, pkgs.ExecWrapper(msg.Args)
+		return m, pkgs.ExecWrapper(&pkgs.PacmanOpts{}, msg.Args)
+	case messages.InstallPkgMsg:
+		m.state = stateConfirmInstall
+		m.selectedPkg = msg.Args[0]
+		return m, nil
+	case messages.InstallResultMsg:
+		if msg.Err.Err != nil {
+			m.state = stateError
+			m.lastErr.err = msg.Err.Err
+			return m, nil
+		}
+		m.state = stateDone
+		m.lastOutput = outputMsg(msg.Output)
+		return m, nil
 	}
 
 	updated, cmd := m.current.Update(msg)

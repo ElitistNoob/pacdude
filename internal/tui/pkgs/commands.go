@@ -9,8 +9,21 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func execCmd(args []string) ([]byte, error) {
+type PacmanOpts struct {
+	Sudo bool
+}
+
+func execCmd(opts *PacmanOpts, args []string) ([]byte, error) {
+	if opts == nil {
+		opts = &PacmanOpts{
+			Sudo: false,
+		}
+	}
+
 	cmd := exec.Command("pacman", args...)
+	if opts.Sudo {
+		cmd = exec.Command("sudo", args...)
+	}
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -20,9 +33,9 @@ func execCmd(args []string) ([]byte, error) {
 	return output, err
 }
 
-func ExecWrapper(args []string) tea.Cmd {
+func ExecWrapper(opts *PacmanOpts, args []string) tea.Cmd {
 	return func() tea.Msg {
-		output, err := execCmd(args)
+		output, err := execCmd(opts, args)
 		return msg.PkgOutput{Output: output, Err: msg.ErrMsg{Err: err}}
 	}
 }

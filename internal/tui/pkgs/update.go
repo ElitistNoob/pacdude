@@ -1,6 +1,9 @@
 package pkgs
 
 import (
+	"strings"
+
+	hdlr "github.com/ElitistNoob/pacdude/internal/handlers"
 	"github.com/ElitistNoob/pacdude/internal/tui/messages"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -21,7 +24,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				args = []string{"-Ss", m.result}
 				m.showModal = false
 				m.textInput.Blur()
-				return m, messages.MsgHandler(args)
+				return m, hdlr.HandleShowPackageScreen(args)
 			case "esc":
 				m.showModal = false
 				m.textInput.Blur()
@@ -32,34 +35,10 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.textInput, cmd = m.textInput.Update(msg)
 		return m, cmd
 	}
+
 	switch msg := msg.(type) {
 
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "up", "k":
-			if m.cursor > 0 {
-				m.cursor--
-			}
-		case "down", "j":
-			if m.cursor < len(m.choices)-1 {
-				m.cursor++
-			}
-		case "/":
-			m.showModal = true
-			m.textInput.Focus()
-			m.textInput.SetValue("")
-			return m, textinput.Blink
-		}
-
-		m.viewport.SetContent(m.renderContent())
-		m.syncViewportScroll()
-		return m, nil
-
-	case messages.PkgOutput:
-		m.SetPackages(msg.Output)
-		m.viewport.SetContent(m.renderContent())
-		return m, nil
-
+	// Window Resize Messages
 	case tea.WindowSizeMsg:
 		headerHeight := lipgloss.Height(m.headerView())
 		footerHeight := lipgloss.Height(m.footerView())
@@ -75,6 +54,37 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.viewport.SetContent(m.renderContent())
 		}
 
+	// Keypress Messages
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "up", "k":
+			if m.cursor > 0 {
+				m.cursor--
+			}
+		case "down", "j":
+			if m.cursor < len(m.choices)-1 {
+				m.cursor++
+			}
+		case "/":
+			m.showModal = true
+			m.textInput.Focus()
+			m.textInput.SetValue("")
+			return m, textinput.Blink
+		case "i":
+			args := []string{strings.Split(m.selection, " ")[0]}
+			return m, m.handleInstallPkgMsg(args)
+		}
+
+		m.selection = m.choices[m.cursor].title
+		m.viewport.SetContent(m.renderContent())
+		m.syncViewportScroll()
+		return m, nil
+
+	// Event Trigger Messages
+	case messages.PkgOutput:
+		m.SetPackages(msg.Output)
+		m.viewport.SetContent(m.renderContent())
+		return m, m.handleExecDoneMsg()
 	}
 
 	m.viewport, cmd = m.viewport.Update(msg)
