@@ -1,11 +1,23 @@
 package backend
 
-import "os/exec"
+import tea "github.com/charmbracelet/bubbletea"
 
-func newResultMsg(cmd exec.Cmd) ResultMsg {
-	output, err := cmd.CombinedOutput()
-	return ResultMsg{
-		Output: output,
-		Err:    ErrMsg{Err: err},
+func newResultMsg(output []byte, err error) tea.Cmd {
+	return func() tea.Msg {
+		return ResultMsg{
+			Output: output,
+			Err:    ErrMsg{Err: err},
+		}
+	}
+}
+
+func newInstallResultMsg(output []byte, err error) tea.Cmd {
+	return func() tea.Msg {
+		return InstallResultMsg{
+			Result: ResultMsg{
+				Output: output,
+				Err:    ErrMsg{Err: err},
+			},
+		}
 	}
 }

@@ -1,4 +1,4 @@
-package pkgs
+package packagebrowser
 
 import (
 	"fmt"
@@ -22,15 +22,26 @@ var (
 	}()
 )
 
-func (m model) View() string {
-	if !m.ready {
-		return "\n  Initializing..."
+func (m *PackageBrowserModel) View() string {
+	var background string
+	switch m.state {
+	case stateLoading:
+		return "\n Initializing..."
+	case stateReady:
+		background = fmt.Sprintf("%s\n%s\n%s\n",
+			m.headerView(),
+			m.viewport.View(),
+			m.footerView(),
+		)
+	case stateConfirm:
+		return fmt.Sprintf("Install %s\n\n[y] Yes\n\n[n] No", m.selection)
+	case stateInstall:
+		return fmt.Sprintf("Installing %s...", m.selection)
+	case stateComplete:
+		return fmt.Sprintf("%s was installed successfully\n\nPress [q] to continue", m.selection)
+	case stateError:
+		return fmt.Sprintf("An error occured while trying to install %s\n\nErr: %s\n\nPress [q] to continue", m.selection, m.error)
 	}
-	background := fmt.Sprintf("%s\n%s\n%s\n",
-		m.headerView(),
-		m.viewport.View(),
-		m.footerView(),
-	)
 
 	if !m.showModal {
 		return background
@@ -44,7 +55,7 @@ func (m model) View() string {
 	return background + modal
 }
 
-func (m model) renderContent() string {
+func (m *PackageBrowserModel) renderContent() string {
 	lines := make([]string, 0, len(m.choices))
 	for i, pkg := range m.choices {
 		cursor := "[ ]"
@@ -58,14 +69,14 @@ func (m model) renderContent() string {
 	return strings.Join(lines, "\n")
 }
 
-func (m model) headerView() string {
+func (m *PackageBrowserModel) headerView() string {
 	title := titleStyle.Render("Packages")
-	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(title)))
+	line := strings.Repeat("─", max(0, m.width-lipgloss.Width(title)))
 	return lipgloss.JoinHorizontal(lipgloss.Center, title, line)
 }
 
-func (m model) footerView() string {
+func (m *PackageBrowserModel) footerView() string {
 	info := infoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
-	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(info)))
+	line := strings.Repeat("─", max(0, m.width-lipgloss.Width(info)))
 	return lipgloss.JoinHorizontal(lipgloss.Center, line, info)
 }

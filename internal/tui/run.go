@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/ElitistNoob/pacdude/internal/app"
+	backendselector "github.com/ElitistNoob/pacdude/internal/tui/screens/backendSelector"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -20,7 +22,9 @@ func Run() {
 		os.Exit(1)
 	}
 
-	p := tea.NewProgram(newTuiModel(),
+	p := tea.NewProgram(app.AppModel{
+		Current: backendselector.NewModel(),
+	},
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),
 	)
