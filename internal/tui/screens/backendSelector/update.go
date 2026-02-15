@@ -29,9 +29,12 @@ func (m *backendSelectorModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 			switch selectedChoice {
 			case "Pacman":
 				b = backend.PacmanBackend{}
-				newScreen := pb.NewModel(b)
-				return m, func() tea.Msg { return app.ChangeScreenMsg{NewScreen: newScreen} }
+			case "Flatpak":
+				b = backend.FlatpakBackend{}
 			}
+
+			newScreen := pb.NewModel(b)
+			return m, func() tea.Msg { return app.ChangeScreenMsg{NewScreen: newScreen} }
 		}
 	}
 

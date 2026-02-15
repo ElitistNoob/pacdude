@@ -13,7 +13,7 @@ type backendSelectorModel struct {
 func NewModel() app.Screen {
 	return &backendSelectorModel{
 		cursor:  0,
-		choices: []string{"Pacman"},
+		choices: []string{"Pacman", "Flatpak"},
 	}
 }
 
