@@ -8,7 +8,7 @@ import (
 func (m *backendSelectorModel) View() string {
 	var menu strings.Builder
 	lines := make([]string, 0, len(m.choices)-1)
-	lines = append(lines, "What do you want to do?\n\n")
+	lines = append(lines, "Select Package Manager\n\n")
 	for i, choice := range m.choices {
 		cursor := " "
 		if m.cursor == i {
