@@ -5,13 +5,31 @@ import tea "github.com/charmbracelet/bubbletea"
 type OutputMsg []byte
 type ErrMsg struct{ Err error }
 
-type ResultMsg struct {
+type ListInstalledPackagesMsg struct {
 	Output OutputMsg
 	Err    ErrMsg
 }
 
-type InstallResultMsg struct {
-	Result ResultMsg
+type InstallPackageResultMsg struct {
+	Err ErrMsg
+}
+
+type RemovePackageResultMsg struct {
+	Err ErrMsg
+}
+
+type SearchPacmanPackagesMsg struct {
+	Output OutputMsg
+	Err    ErrMsg
+}
+
+type ListAvailableUpdatesMsg struct {
+	Output OutputMsg
+	Err    ErrMsg
+}
+
+type UpdateAllMsg struct {
+	Err ErrMsg
 }
 
 type BackendInterface interface {
@@ -20,4 +38,5 @@ type BackendInterface interface {
 	Install(pkg string) tea.Cmd
 	Remove(pkg string) tea.Cmd
 	ListUpgradable() tea.Cmd
+	UpdateAll() tea.Cmd
 }
