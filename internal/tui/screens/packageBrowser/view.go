@@ -1,21 +1,25 @@
 package packagebrowser
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/ElitistNoob/pacdude/internal/backend"
+)
 
 func (m *PackageBrowserModel) View() string {
 	selectedItem := m.list.SelectedItem()
-	var item pkg
+	var i backend.Pkg
 	if selectedItem != nil {
-		p, ok := selectedItem.(pkg)
+		p, ok := selectedItem.(backend.Pkg)
 		if ok {
-			item = p
+			i = p
 		}
 	}
 	switch m.state {
 	case stateInstalled:
-		return fmt.Sprintf("%s was successfully installed", item.title)
+		return fmt.Sprintf("%s was successfully installed", i.Name)
 	case stateRemoved:
-		return fmt.Sprintf("%s has been uninstalled", item.title)
+		return fmt.Sprintf("%s has been uninstalled", i.Name)
 	case stateUpdated:
 		return "Packages have been updated!"
 	}

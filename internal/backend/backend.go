@@ -2,6 +2,14 @@ package backend
 
 import tea "github.com/charmbracelet/bubbletea"
 
+type Pkg struct {
+	Name, Desc string
+}
+
+func (p Pkg) Title() string       { return p.Name }
+func (p Pkg) Description() string { return p.Desc }
+func (p Pkg) FilterValue() string { return p.Name }
+
 type OutputMsg []byte
 type ErrMsg struct{ Err error }
 
@@ -39,4 +47,5 @@ type BackendInterface interface {
 	Remove(pkg string) tea.Cmd
 	ListUpgradable() tea.Cmd
 	UpdateAll() tea.Cmd
+	ParseOutput(output []byte) []Pkg
 }

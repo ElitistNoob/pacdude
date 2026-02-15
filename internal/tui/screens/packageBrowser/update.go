@@ -39,17 +39,17 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 		case key.Matches(msg, m.keys.install):
 			selectedPkg := m.list.SelectedItem()
 			if selectedPkg != nil {
-				p, ok := selectedPkg.(pkg)
+				p, ok := selectedPkg.(backend.Pkg)
 				if ok {
-					return m, m.Backend.Install(strings.Split(p.title, " ")[0])
+					return m, m.Backend.Install(strings.Split(p.Name, " ")[0])
 				}
 			}
 		case key.Matches(msg, m.keys.remove):
 			selectedPkg := m.list.SelectedItem()
 			if selectedPkg != nil {
-				p, ok := selectedPkg.(pkg)
+				p, ok := selectedPkg.(backend.Pkg)
 				if ok {
-					return m, m.Backend.Remove(strings.Split(p.title, " ")[0])
+					return m, m.Backend.Remove(strings.Split(p.Name, " ")[0])
 				}
 			}
 		case key.Matches(msg, m.keys.updatable):

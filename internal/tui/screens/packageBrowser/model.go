@@ -19,15 +19,7 @@ const (
 	stateUpdated
 )
 
-type pkg struct {
-	title, desc string
-}
-
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
-
-func (i pkg) Title() string       { return i.title }
-func (i pkg) Description() string { return i.desc }
-func (i pkg) FilterValue() string { return i.title }
 
 type listKeyMap struct {
 	install          key.Binding
@@ -75,7 +67,7 @@ type PackageBrowserModel struct {
 func NewModel(b backend.BackendInterface) app.Screen {
 	listKey := newListKeyMap()
 	l := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
-	l.Title = "Packges"
+	l.Title = "Installed Packages"
 	l.AdditionalFullHelpKeys = func() []key.Binding {
 		return []key.Binding{
 			listKey.install,
