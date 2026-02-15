@@ -31,6 +31,8 @@ func (m *backendSelectorModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 				b = backend.PacmanBackend{}
 			case "Flatpak":
 				b = backend.FlatpakBackend{}
+			case "Brew":
+				b = backend.BrewBackend{}
 			}
 
 			newScreen := pb.NewModel(b)
