@@ -3,6 +3,7 @@ package packagebrowser
 import (
 	"github.com/ElitistNoob/pacdude/internal/app"
 	"github.com/ElitistNoob/pacdude/internal/backend"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -13,10 +14,9 @@ type state int
 const (
 	stateLoading state = iota
 	stateReady
-	stateConfirm
-	stateInstall
-	stateComplete
-	stateError
+	stateInstalled
+	stateRemoved
+	stateUpdated
 )
 
 type pkg struct {
@@ -29,22 +29,67 @@ func (i pkg) Title() string       { return i.title }
 func (i pkg) Description() string { return i.desc }
 func (i pkg) FilterValue() string { return i.title }
 
+type listKeyMap struct {
+	install          key.Binding
+	remove           key.Binding
+	updatable        key.Binding
+	updateAll        key.Binding
+	InstalledPackage key.Binding
+}
+
+func newListKeyMap() *listKeyMap {
+	return &listKeyMap{
+		install: key.NewBinding(
+			key.WithKeys("i"),
+			key.WithHelp("i", "install"),
+		),
+		InstalledPackage: key.NewBinding(
+			key.WithKeys("esc"),
+			key.WithHelp("esc", "install"),
+		),
+		remove: key.NewBinding(
+			key.WithKeys("d"),
+			key.WithHelp("d", "uninstall"),
+		),
+		updatable: key.NewBinding(
+			key.WithKeys("u"),
+			key.WithHelp("u", "show available updates"),
+		),
+		updateAll: key.NewBinding(
+			key.WithKeys("U"),
+			key.WithHelp("U", "update all packages"),
+		),
+	}
+}
+
 type PackageBrowserModel struct {
 	Backend backend.BackendInterface
 	state   state
 	list    list.Model
+	keys    *listKeyMap
 	error   string
 	width   int
 	height  int
 }
 
 func NewModel(b backend.BackendInterface) app.Screen {
+	listKey := newListKeyMap()
 	l := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
 	l.Title = "Packges"
+	l.AdditionalFullHelpKeys = func() []key.Binding {
+		return []key.Binding{
+			listKey.install,
+			listKey.remove,
+			listKey.updatable,
+			listKey.updateAll,
+			listKey.InstalledPackage,
+		}
+	}
 
 	return &PackageBrowserModel{
 		Backend: b,
 		list:    l,
+		keys:    listKey,
 	}
 }
 
