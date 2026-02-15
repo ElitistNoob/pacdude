@@ -1,26 +1,23 @@
 package packagebrowser
 
-import (
-	"fmt"
-)
+import "fmt"
 
 func (m *PackageBrowserModel) View() string {
-	selectedPkg := m.list.SelectedItem()
+	selectedItem := m.list.SelectedItem()
+	var item pkg
+	if selectedItem != nil {
+		p, ok := selectedItem.(pkg)
+		if ok {
+			item = p
+		}
+	}
 	switch m.state {
-	case stateLoading:
-		return "\n Initializing..."
-	case stateConfirm:
-		return fmt.Sprintf("Install %s\n\n[y] Yes\n\n[n] No", selectedPkg)
-	case stateInstall:
-		return fmt.Sprintf("Installing %s...", selectedPkg)
-	case stateComplete:
-		return fmt.Sprintf("%s was installed successfully\n\nPress [q] to continue", selectedPkg)
-	case stateError:
-		return fmt.Sprintf(
-			"An error occured while trying to install %s\n\nErr: %s\n\nPress [q] to continue",
-			selectedPkg,
-			m.error,
-		)
+	case stateInstalled:
+		return fmt.Sprintf("%s was successfully installed", item.title)
+	case stateRemoved:
+		return fmt.Sprintf("%s has been uninstalled", item.title)
+	case stateUpdated:
+		return "Packages have been updated!"
 	}
 	return m.list.View()
 }
