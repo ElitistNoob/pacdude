@@ -20,7 +20,7 @@ type BrewRoot struct {
 type BrewBackend struct{}
 
 func (p BrewBackend) ListInstalled() tea.Cmd {
-	cmd := exec.Command("brew", "list", "--formula", "-1")
+	cmd := exec.Command("brew", "info", "--json=v2", "-installed")
 	output, err := cmd.CombinedOutput()
 	return func() tea.Msg {
 		return ListInstalledPackagesMsg{
