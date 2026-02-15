@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-func parseOutput(output []byte) []pkg {
+func (m *PackageBrowserModel) parseOutput(output []byte) []pkg {
 	lines := strings.Split(string(output), "\n")
 	pkgs := make([]pkg, 0, len(lines)/2)
 
