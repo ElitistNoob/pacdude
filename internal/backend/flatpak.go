@@ -49,7 +49,9 @@ func (p FlatpakBackend) Remove(pkg string) tea.Cmd {
 }
 
 func (p FlatpakBackend) ListUpgradable() tea.Cmd {
-	cmd := exec.Command("flatpak", "update", "--appstream", "&&", "flatpak", "remote-ls", "--updates")
+	_ = exec.Command("flatpak", "update", "--appstream").Run()
+
+	cmd := exec.Command("flatpak", "remote-ls", "--updates")
 	output, err := cmd.CombinedOutput()
 	return func() tea.Msg {
 		return ListAvailableUpdatesMsg{
