@@ -2,9 +2,12 @@ package packagebrowser
 
 import (
 	"strings"
+
+	"github.com/charmbracelet/bubbles/list"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
-func (m *PackageBrowserModel) parseOutput(output []byte) []pkg {
+func parseOutput(output []byte) []pkg {
 	lines := strings.Split(string(output), "\n")
 	pkgs := make([]pkg, 0, len(lines)/2)
 
@@ -14,4 +17,15 @@ func (m *PackageBrowserModel) parseOutput(output []byte) []pkg {
 	}
 
 	return pkgs
+}
+
+func (m *PackageBrowserModel) setListItems(output []byte) tea.Cmd {
+	return func() tea.Msg {
+		o := parseOutput(output)
+		items := make([]list.Item, len(o))
+		for i, v := range o {
+			items[i] = v
+		}
+		return m.list.SetItems(items)
+	}
 }
