@@ -62,6 +62,7 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 	// Backend Messages
 	case backend.ListInstalledPackagesMsg:
 		m.state = stateReady
+		m.list.Title = "Installed Packages"
 		return m, m.setListItems(msg.Output)
 	case backend.InstallPackageResultMsg:
 		if msg.Err.Err != nil {
@@ -88,6 +89,7 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 		m.state = stateUpdated
 		return m, nil
 	case backend.ListAvailableUpdatesMsg:
+		m.list.Title = "Available Updates"
 		return m, m.setListItems(msg.Output)
 	case backend.SearchPacmanPackagesMsg:
 		return m, m.setListItems(msg.Output)
