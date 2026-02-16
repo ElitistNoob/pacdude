@@ -10,9 +10,9 @@ import (
 type PacmanBackend struct{}
 
 func (p PacmanBackend) ListInstalled() tea.Cmd {
-	cmd := exec.Command("pacman", "-Qs")
-	output, err := cmd.CombinedOutput()
 	return func() tea.Msg {
+		cmd := exec.Command("pacman", "-Qs")
+		output, err := cmd.CombinedOutput()
 		return ListInstalledPackagesMsg{
 			Output: output,
 			Err:    ErrMsg{Err: err},
@@ -21,9 +21,9 @@ func (p PacmanBackend) ListInstalled() tea.Cmd {
 }
 
 func (p PacmanBackend) Search(query string) tea.Cmd {
-	cmd := exec.Command("pacman", "-Ss", query)
-	output, err := cmd.CombinedOutput()
 	return func() tea.Msg {
+		cmd := exec.Command("pacman", "-Ss", query)
+		output, err := cmd.CombinedOutput()
 		return SearchPacmanPackagesMsg{
 			Output: output,
 			Err:    ErrMsg{Err: err},
@@ -46,9 +46,9 @@ func (p PacmanBackend) Remove(pkg string) tea.Cmd {
 }
 
 func (p PacmanBackend) ListUpgradable() tea.Cmd {
-	cmd := exec.Command("checkupdates")
-	output, err := cmd.CombinedOutput()
 	return func() tea.Msg {
+		cmd := exec.Command("checkupdates")
+		output, err := cmd.CombinedOutput()
 		return ListAvailableUpdatesMsg{
 			Output: output,
 			Err:    ErrMsg{Err: err},

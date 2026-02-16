@@ -11,9 +11,9 @@ import (
 type FlatpakBackend struct{}
 
 func (p FlatpakBackend) ListInstalled() tea.Cmd {
-	cmd := exec.Command("flatpak", "list", "--columns=name,application,description")
-	output, err := cmd.CombinedOutput()
 	return func() tea.Msg {
+		cmd := exec.Command("flatpak", "list", "--columns=name,application,description")
+		output, err := cmd.CombinedOutput()
 		return ListInstalledPackagesMsg{
 			Output: output,
 			Err:    ErrMsg{Err: err},
@@ -22,9 +22,9 @@ func (p FlatpakBackend) ListInstalled() tea.Cmd {
 }
 
 func (p FlatpakBackend) Search(query string) tea.Cmd {
-	cmd := exec.Command("flatpak", "search", "--columns=name,application,description", query)
-	output, err := cmd.CombinedOutput()
 	return func() tea.Msg {
+		cmd := exec.Command("flatpak", "search", "--columns=name,application,description", query)
+		output, err := cmd.CombinedOutput()
 		return SearchPacmanPackagesMsg{
 			Output: output,
 			Err:    ErrMsg{Err: err},
@@ -49,11 +49,11 @@ func (p FlatpakBackend) Remove(pkg string) tea.Cmd {
 }
 
 func (p FlatpakBackend) ListUpgradable() tea.Cmd {
-	_ = exec.Command("flatpak", "update", "--appstream").Run()
-
-	cmd := exec.Command("flatpak", "remote-ls", "--updates")
-	output, err := cmd.CombinedOutput()
 	return func() tea.Msg {
+		_ = exec.Command("flatpak", "update", "--appstream").Run()
+
+		cmd := exec.Command("flatpak", "remote-ls", "--updates")
+		output, err := cmd.CombinedOutput()
 		return ListAvailableUpdatesMsg{
 			Output: output,
 			Err:    ErrMsg{Err: err},
