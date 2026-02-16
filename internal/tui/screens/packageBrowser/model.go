@@ -67,7 +67,9 @@ type PackageBrowserModel struct {
 func NewModel(b backend.BackendInterface) app.Screen {
 	listKey := newListKeyMap()
 	l := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
-	l.Title = "Installed Packages"
+	l.Title = "Getting Packages"
+	l.SetShowTitle(true)
+	l.SetShowStatusBar(true)
 	l.AdditionalFullHelpKeys = func() []key.Binding {
 		return []key.Binding{
 			listKey.install,
@@ -86,5 +88,5 @@ func NewModel(b backend.BackendInterface) app.Screen {
 }
 
 func (m *PackageBrowserModel) Init() tea.Cmd {
-	return m.Backend.ListInstalled()
+	return tea.Batch(m.list.ToggleSpinner(), m.Backend.ListInstalled())
 }

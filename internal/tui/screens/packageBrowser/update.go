@@ -28,9 +28,16 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 			switch msg.String() {
 			case "enter":
 				query := m.list.FilterValue()
+
+				m.list.FilterInput.Blur()
+				m.list.ResetFilter()
 				m.list.SetFilterState(list.Unfiltered)
+				m.list.SetShowFilter(false)
+				m.list.SetShowTitle(true)
+
 				m.list.Title = "Search Results: " + query
-				return m, m.Backend.Search(query)
+
+				return m, tea.Batch(m.list.ToggleSpinner(), m.Backend.Search(query))
 			}
 			break
 		}
@@ -56,12 +63,13 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 		case key.Matches(msg, m.keys.updateAll):
 			return m, m.Backend.UpdateAll()
 		case key.Matches(msg, m.keys.InstalledPackage):
-			return m, m.Backend.ListInstalled()
+			return m, tea.Batch(m.list.ToggleSpinner(), m.Backend.ListInstalled())
 		}
 
 	// Backend Messages
 	case backend.ListInstalledPackagesMsg:
 		m.state = stateReady
+		m.list.StopSpinner()
 		m.list.Title = "Installed Packages"
 		return m, m.setListItems(msg.Output)
 	case backend.InstallPackageResultMsg:
@@ -90,13 +98,17 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 		return m, nil
 	case backend.ListAvailableUpdatesMsg:
 		m.list.Title = "Available Updates"
+		m.list.StopSpinner()
 		return m, m.setListItems(msg.Output)
 	case backend.SearchPacmanPackagesMsg:
+		m.list.StopSpinner()
+		m.list.FilterInput.Focus()
 		return m, m.setListItems(msg.Output)
 	}
 
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
+
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
 }
