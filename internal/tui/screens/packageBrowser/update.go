@@ -59,7 +59,7 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 				}
 			}
 		case key.Matches(msg, m.keys.updatable):
-			return m, m.Backend.ListUpgradable()
+			return m, tea.Batch(m.list.ToggleSpinner(), m.Backend.ListUpgradable())
 		case key.Matches(msg, m.keys.updateAll):
 			return m, m.Backend.UpdateAll()
 		case key.Matches(msg, m.keys.InstalledPackage):
