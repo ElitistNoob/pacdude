@@ -99,8 +99,8 @@ func (p BrewBackend) ParseOutput(output []byte) []Pkg {
 		}
 		split := strings.SplitN(line, " ", 2)
 		pkgs = append(pkgs, Pkg{
-			Name: split[0],
-			Desc: strings.Join(strings.Split(split[1], ":"), ""),
+			Name: strings.Join(strings.Split(split[0], ":"), ""),
+			Desc: split[1],
 		})
 	}
 
