@@ -30,7 +30,6 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 				query := m.list.FilterValue()
 				m.list.SetFilterState(list.Unfiltered)
 				m.list.Title = "Search Results: " + query
-				m.list.StartSpinner()
 				return m, m.Backend.Search(query)
 			}
 			break
@@ -53,7 +52,6 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 				}
 			}
 		case key.Matches(msg, m.keys.updatable):
-			m.list.StartSpinner()
 			return m, m.Backend.ListUpgradable()
 		case key.Matches(msg, m.keys.updateAll):
 			return m, m.Backend.UpdateAll()
@@ -92,7 +90,6 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 	case backend.ListAvailableUpdatesMsg:
 		return m, m.setListItems(msg.Output)
 	case backend.SearchPacmanPackagesMsg:
-		m.list.StopSpinner()
 		return m, m.setListItems(msg.Output)
 	}
 
