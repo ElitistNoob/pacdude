@@ -3,6 +3,7 @@ package backend
 import (
 	"encoding/json"
 	"os/exec"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -77,14 +78,30 @@ func (p BrewBackend) UpdateAll() tea.Cmd {
 
 func (p BrewBackend) ParseOutput(output []byte) []Pkg {
 	var data BrewRoot
-	json.Unmarshal(output, &data)
-
-	pkgs := make([]Pkg, 0, len(data.Formulae))
-	for i, f := range pkgs {
-		pkgs[i] = Pkg{
-			Name: f.Name,
-			Desc: f.Desc,
+	if err := json.Unmarshal(output, &data); err == nil && len(data.Formulae) > 0 {
+		pkgs := make([]Pkg, 0, len(data.Formulae))
+		for _, f := range data.Formulae {
+			pkgs = append(pkgs, Pkg{
+				Name: f.Name,
+				Desc: f.Desc,
+			})
 		}
+		return pkgs
+	}
+
+	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+
+	pkgs := make([]Pkg, 0, len(lines))
+	for _, line := range lines {
+		line := strings.TrimSpace(line)
+		if line == "" || line == "==> Formulae" || line == "==> Casks" {
+			continue
+		}
+		split := strings.SplitN(line, " ", 2)
+		pkgs = append(pkgs, Pkg{
+			Name: split[0],
+			Desc: strings.Join(strings.Split(split[1], ":"), ""),
+		})
 	}
 
 	return pkgs
