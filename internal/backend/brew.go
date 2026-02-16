@@ -20,7 +20,7 @@ type BrewRoot struct {
 type BrewBackend struct{}
 
 func (p BrewBackend) ListInstalled() tea.Cmd {
-	cmd := exec.Command("brew", "info", "--json=v2", "-installed")
+	cmd := exec.Command("brew", "info", "--json=v2", "--installed")
 	output, err := cmd.CombinedOutput()
 	return func() tea.Msg {
 		return ListInstalledPackagesMsg{
@@ -31,7 +31,7 @@ func (p BrewBackend) ListInstalled() tea.Cmd {
 }
 
 func (p BrewBackend) Search(query string) tea.Cmd {
-	cmd := exec.Command("brew", "search", query)
+	cmd := exec.Command("brew", "desc", "-s", query)
 	output, err := cmd.CombinedOutput()
 	return func() tea.Msg {
 		return SearchPacmanPackagesMsg{
@@ -58,7 +58,7 @@ func (p BrewBackend) Remove(pkg string) tea.Cmd {
 func (p BrewBackend) ListUpgradable() tea.Cmd {
 	_ = exec.Command("brew", "update").Run()
 
-	cmd := exec.Command("brew", "outdated")
+	cmd := exec.Command("brew", "outdated", "--verbose")
 	output, err := cmd.CombinedOutput()
 	return func() tea.Msg {
 		return ListAvailableUpdatesMsg{
