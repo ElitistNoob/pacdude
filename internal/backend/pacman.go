@@ -69,7 +69,7 @@ func (p PacmanBackend) ParseOutput(output []byte) []Pkg {
 
 	for i := 0; i < len(lines)-1; i += 2 {
 		title, desc := lines[i], lines[i+1]
-		pkgs = append(pkgs, Pkg{Name: title, Desc: desc})
+		pkgs = append(pkgs, Pkg{Name: title, Desc: strings.TrimSpace(desc)})
 	}
 
 	return pkgs
