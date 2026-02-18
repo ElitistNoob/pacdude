@@ -19,39 +19,40 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		h, v := docStyle.GetFrameSize()
-		m.list.SetSize(msg.Width-v, msg.Height-h)
+		m.tabContent[m.activeTab].SetSize(msg.Width-v, msg.Height-h)
 		m.state = stateReady
 
 	// Keypress Messages
 	case tea.KeyMsg:
-		if m.list.FilterState() == list.Filtering {
+		if m.tabContent[m.activeTab].FilterState() == list.Filtering {
 			switch msg.String() {
 			case "enter":
-				query := m.list.FilterValue()
+				query := m.tabContent[m.activeTab].FilterValue()
 
-				m.list.FilterInput.Blur()
-				m.list.ResetFilter()
-				m.list.SetFilterState(list.Unfiltered)
-				m.list.SetShowFilter(false)
-				m.list.SetShowTitle(true)
+				m.tabContent[m.activeTab].FilterInput.Blur()
+				m.tabContent[m.activeTab].ResetFilter()
+				m.tabContent[m.activeTab].SetFilterState(list.Unfiltered)
+				m.tabContent[m.activeTab].SetShowFilter(false)
+				m.tabContent[m.activeTab].SetShowTitle(true)
 
-				m.list.Title = "Search Results: " + query
+				// m..Title = "Search Results: " + query
 
-				return m, tea.Batch(m.list.ToggleSpinner(), m.Backend.Search(query))
+				return m, tea.Batch(m.tabContent[m.activeTab].ToggleSpinner(), m.Backend.Search(query))
 			}
 			break
 		}
 		switch {
 		case key.Matches(msg, m.keys.install):
-			selectedPkg := m.list.SelectedItem()
-			if selectedPkg != nil {
-				p, ok := selectedPkg.(backend.Pkg)
-				if ok {
-					return m, m.Backend.Install(strings.Split(p.Name, " ")[0])
-				}
-			}
+			m.activeTab = 0
+			// selectedPkg := m.tabContent[m.activeTab].SelectedItem()
+			// if selectedPkg != nil {
+			// 	p, ok := selectedPkg.(backend.Pkg)
+			// 	if ok {
+			// 		return m, m.Backend.Install(strings.Split(p.Name, " ")[0])
+			// 	}
+			// }
 		case key.Matches(msg, m.keys.remove):
-			selectedPkg := m.list.SelectedItem()
+			selectedPkg := m.tabContent[m.activeTab].SelectedItem()
 			if selectedPkg != nil {
 				p, ok := selectedPkg.(backend.Pkg)
 				if ok {
@@ -59,18 +60,19 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 				}
 			}
 		case key.Matches(msg, m.keys.updatable):
-			return m, tea.Batch(m.list.ToggleSpinner(), m.Backend.ListUpgradable())
+			m.activeTab = 1
+			return m, tea.Batch(func() tea.Msg { return m.tabContent[m.activeTab] }, m.tabContent[m.activeTab].ToggleSpinner(), m.Backend.ListUpgradable())
 		case key.Matches(msg, m.keys.updateAll):
 			return m, m.Backend.UpdateAll()
 		case key.Matches(msg, m.keys.InstalledPackage):
-			return m, tea.Batch(m.list.ToggleSpinner(), m.Backend.ListInstalled())
+			return m, tea.Batch(m.tabContent[m.activeTab].ToggleSpinner(), m.Backend.ListInstalled())
 		}
 
 	// Backend Messages
 	case backend.ListInstalledPackagesMsg:
 		m.state = stateReady
-		m.list.StopSpinner()
-		m.list.Title = "Installed Packages"
+		m.tabContent[m.activeTab].StopSpinner()
+		// m.list.Title = "Installed Packages"
 		return m, m.setListItems(msg.Output)
 	case backend.InstallPackageResultMsg:
 		if msg.Err.Err != nil {
@@ -97,17 +99,17 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 		m.state = stateUpdated
 		return m, nil
 	case backend.ListAvailableUpdatesMsg:
-		m.list.Title = "Available Updates"
-		m.list.StopSpinner()
+		// m.list.Title = "Available Updates"
+		m.tabContent[m.activeTab].StopSpinner()
 		return m, m.setListItems(msg.Output)
 	case backend.SearchPacmanPackagesMsg:
-		m.list.StopSpinner()
-		m.list.FilterInput.Focus()
+		m.tabContent[m.activeTab].StopSpinner()
+		m.tabContent[m.activeTab].FilterInput.Focus()
 		return m, m.setListItems(msg.Output)
 	}
 
 	var cmd tea.Cmd
-	m.list, cmd = m.list.Update(msg)
+	m.tabContent[m.activeTab], cmd = m.tabContent[m.activeTab].Update(msg)
 
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)

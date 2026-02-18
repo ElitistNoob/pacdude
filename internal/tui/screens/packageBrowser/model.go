@@ -57,36 +57,45 @@ func newListKeyMap() *listKeyMap {
 type PackageBrowserModel struct {
 	Backend backend.BackendInterface
 	state   state
-	list    list.Model
-	keys    *listKeyMap
-	error   string
-	width   int
-	height  int
+	// list    list.Model
+	tabContent []list.Model
+	activeTab  int
+	keys       *listKeyMap
+	error      string
+	width      int
+	height     int
 }
 
 func NewModel(b backend.BackendInterface) app.Screen {
+	tabs := []string{"Installed", "Available Updates"}
+	tabContent := make([]list.Model, 0, len(tabs))
 	listKey := newListKeyMap()
-	l := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
-	l.Title = "Getting Packages"
-	l.SetShowTitle(true)
-	l.SetShowStatusBar(true)
-	l.AdditionalFullHelpKeys = func() []key.Binding {
-		return []key.Binding{
-			listKey.install,
-			listKey.remove,
-			listKey.updatable,
-			listKey.updateAll,
-			listKey.InstalledPackage,
+	for _, tab := range tabs {
+		l := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
+		l.Title = tab
+		l.SetShowTitle(false)
+		l.SetShowStatusBar(true)
+		l.AdditionalFullHelpKeys = func() []key.Binding {
+			return []key.Binding{
+				listKey.install,
+				listKey.remove,
+				listKey.updatable,
+				listKey.updateAll,
+				listKey.InstalledPackage,
+			}
 		}
+
+		tabContent = append(tabContent, l)
 	}
 
 	return &PackageBrowserModel{
-		Backend: b,
-		list:    l,
-		keys:    listKey,
+		Backend:    b,
+		tabContent: tabContent,
+		keys:       listKey,
+		activeTab:  0,
 	}
 }
 
 func (m *PackageBrowserModel) Init() tea.Cmd {
-	return tea.Batch(m.list.ToggleSpinner(), m.Backend.ListInstalled())
+	return tea.Batch(m.tabContent[m.activeTab].ToggleSpinner(), m.Backend.ListInstalled())
 }

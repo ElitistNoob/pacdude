@@ -12,6 +12,6 @@ func (m *PackageBrowserModel) setListItems(output []byte) tea.Cmd {
 		for i, v := range o {
 			items[i] = v
 		}
-		return m.list.SetItems(items)
+		return m.tabContent[m.activeTab].SetItems(items)
 	}
 }
