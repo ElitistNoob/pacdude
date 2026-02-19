@@ -23,43 +23,39 @@ var docStyle = lipgloss.NewStyle().Margin(1, 2)
 
 type listKeyMap struct {
 	install          key.Binding
-	remove           key.Binding
+	uninstall        key.Binding
 	updatable        key.Binding
 	updateAll        key.Binding
-	InstalledPackage key.Binding
+	installedPackage key.Binding
 }
 
 func newListKeyMap() *listKeyMap {
 	return &listKeyMap{
+		installedPackage: key.NewBinding(
+			key.WithKeys("I"),
+			key.WithHelp("I", "show installed packages"),
+		),
 		install: key.NewBinding(
-			key.WithKeys("i"),
-			key.WithHelp("i", "install"),
-		),
-		InstalledPackage: key.NewBinding(
-			key.WithKeys("esc"),
-			key.WithHelp("esc", "install"),
-		),
-		remove: key.NewBinding(
-			key.WithKeys("d"),
-			key.WithHelp("d", "uninstall"),
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "install"),
 		),
 		updatable: key.NewBinding(
-			key.WithKeys("u"),
-			key.WithHelp("u", "show available updates"),
-		),
-		updateAll: key.NewBinding(
 			key.WithKeys("U"),
-			key.WithHelp("U", "update all packages"),
+			key.WithHelp("U", "show available updates"),
+		),
+		uninstall: key.NewBinding(
+			key.WithKeys("d"),
+			key.WithHelp("d", "uninstall package"),
 		),
 	}
 }
 
 type PackageBrowserModel struct {
-	Backend backend.BackendInterface
-	state   state
-	// list    list.Model
-	tabContent []list.Model
+	Backend    backend.BackendInterface
+	state      state
+	tabs       []string
 	activeTab  int
+	tabContent []list.Model
 	keys       *listKeyMap
 	error      string
 	width      int
@@ -67,29 +63,30 @@ type PackageBrowserModel struct {
 }
 
 func NewModel(b backend.BackendInterface) app.Screen {
-	tabs := []string{"Installed", "Available Updates"}
-	tabContent := make([]list.Model, 0, len(tabs))
+	tabs := []string{"Installed (I)", "Available Updates (U)"}
+	tabContent := make([]list.Model, len(tabs))
 	listKey := newListKeyMap()
-	for _, tab := range tabs {
+	for i, tab := range tabs {
 		l := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
 		l.Title = tab
 		l.SetShowTitle(false)
 		l.SetShowStatusBar(true)
 		l.AdditionalFullHelpKeys = func() []key.Binding {
 			return []key.Binding{
+				listKey.installedPackage,
 				listKey.install,
-				listKey.remove,
 				listKey.updatable,
 				listKey.updateAll,
-				listKey.InstalledPackage,
+				listKey.uninstall,
 			}
 		}
 
-		tabContent = append(tabContent, l)
+		tabContent[i] = l
 	}
 
 	return &PackageBrowserModel{
 		Backend:    b,
+		tabs:       tabs,
 		tabContent: tabContent,
 		keys:       listKey,
 		activeTab:  0,
