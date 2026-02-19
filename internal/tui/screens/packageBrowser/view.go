@@ -5,16 +5,18 @@ import (
 	"strings"
 
 	"github.com/ElitistNoob/pacdude/internal/backend"
+	"github.com/ElitistNoob/pacdude/internal/tui/styles"
 )
 
 func (m *PackageBrowserModel) View() string {
 	var b strings.Builder
-	for i, tab := range m.tabContent {
+	for i := range m.tabContent {
 		if i == m.activeTab {
-			b.WriteString(fmt.Sprintf("[%s] ", tab.Title))
+			b.WriteString(styles.TabActive.Render(m.tabs[i]))
 		} else {
-			b.WriteString(fmt.Sprintf("%s ", tab.Title))
+			b.WriteString(styles.TabInactive.Render(m.tabs[i]))
 		}
+		b.WriteString(" ")
 	}
 	b.WriteString("\n\n")
 	selectedItem := m.tabContent[m.activeTab].SelectedItem()
