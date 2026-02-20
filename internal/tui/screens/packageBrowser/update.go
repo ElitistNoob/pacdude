@@ -1,9 +1,6 @@
 package packagebrowser
 
 import (
-	"log"
-	"strings"
-
 	"github.com/ElitistNoob/pacdude/internal/app"
 	"github.com/ElitistNoob/pacdude/internal/backend"
 	"github.com/charmbracelet/bubbles/key"
@@ -49,33 +46,18 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 		switch {
 		case key.Matches(msg, m.keys.installedPackage):
 			m.activeTab = 0
-			if len(m.tabContent[m.activeTab].Items()) == 0 {
-				return m, tea.Batch(m.tabContent[m.activeTab].ToggleSpinner(), m.Backend.ListInstalled())
-			}
+			return m, m.loadPackageData(m.Backend.ListInstalled())
 		case key.Matches(msg, m.keys.install):
-			selectedPkg := m.tabContent[m.activeTab].SelectedItem()
-			if selectedPkg != nil {
-				p, ok := selectedPkg.(backend.Pkg)
-				if ok {
-					log.Printf("selected Package: %s", p.Name)
-					return m, m.Backend.Install(strings.Split(p.Name, " ")[0])
-				}
-			}
+			pkg := m.getSelectedPackage()
+			return m, m.Backend.Install(pkg)
 		case key.Matches(msg, m.keys.updatable):
 			m.activeTab = 1
-			if len(m.tabContent[m.activeTab].Items()) == 0 {
-				return m, tea.Batch(m.tabContent[m.activeTab].ToggleSpinner(), m.Backend.ListUpgradable())
-			}
+			return m, m.loadPackageData(m.Backend.ListUpgradable())
 		case key.Matches(msg, m.keys.updateAll):
 			return m, m.Backend.UpdateAll()
 		case key.Matches(msg, m.keys.uninstall):
-			selectedPkg := m.tabContent[m.activeTab].SelectedItem()
-			if selectedPkg != nil {
-				p, ok := selectedPkg.(backend.Pkg)
-				if ok {
-					return m, m.Backend.Remove(strings.Split(p.Name, " ")[0])
-				}
-			}
+			pkg := m.getSelectedPackage()
+			return m, m.Backend.Remove(pkg)
 		}
 
 	// BACKEND MESSAGES //
