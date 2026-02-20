@@ -1,6 +1,8 @@
 package packagebrowser
 
 import (
+	"log"
+
 	"github.com/ElitistNoob/pacdude/internal/app"
 	"github.com/ElitistNoob/pacdude/internal/backend"
 	"github.com/charmbracelet/bubbles/key"
@@ -67,6 +69,7 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 		return m, m.setListItems(msg.Output)
 	case backend.InstallPackageResultMsg:
 		if msg.Err.Err != nil {
+			log.Printf("installation error: %v", msg.Err.Err)
 			m.error = msg.Err.Err.Error()
 			return m, nil
 		}
@@ -77,6 +80,7 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 		return m, m.setListItems(msg.Output)
 	case backend.RemovePackageResultMsg:
 		if msg.Err.Err != nil {
+			log.Printf("error uninstalling package: %v", msg.Err.Err)
 			m.error = msg.Err.Err.Error()
 			return m, nil
 		}
@@ -84,6 +88,7 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 		return m, nil
 	case backend.UpdateAllMsg:
 		if msg.Err.Err != nil {
+			log.Printf("error updating packages: %v", msg.Err.Err)
 			m.error = msg.Err.Err.Error()
 			return m, nil
 		}
