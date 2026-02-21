@@ -47,13 +47,13 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 		// LIST KEYS //
 		switch {
 		case key.Matches(msg, m.keys.installedPackage):
-			m.activeTab = 0
+			m.activeTab = installed
 			return m, m.loadPackageData(m.Backend.ListInstalled())
 		case key.Matches(msg, m.keys.install):
 			pkg := m.getSelectedPackage()
 			return m, m.Backend.Install(pkg)
 		case key.Matches(msg, m.keys.updatable):
-			m.activeTab = 1
+			m.activeTab = updatable
 			return m, m.loadPackageData(m.Backend.ListUpgradable())
 		case key.Matches(msg, m.keys.updateAll):
 			return m, m.Backend.UpdateAll()

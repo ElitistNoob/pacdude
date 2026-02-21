@@ -19,6 +19,13 @@ const (
 	stateUpdated
 )
 
+type tab int
+
+const (
+	installed tab = iota
+	updatable
+)
+
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
 
 type listKeyMap struct {
@@ -54,7 +61,7 @@ type PackageBrowserModel struct {
 	Backend    backend.BackendInterface
 	state      state
 	tabs       []string
-	activeTab  int
+	activeTab  tab
 	tabContent []list.Model
 	keys       *listKeyMap
 	error      string
