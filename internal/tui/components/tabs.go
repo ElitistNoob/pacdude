@@ -86,6 +86,10 @@ func (m *TabsModel) Active() *list.Model {
 	return &m.Tabs[m.Index]
 }
 
+func (m *TabsModel) SetActive(l list.Model) {
+	m.Tabs[m.Index] = l
+}
+
 func (m *TabsModel) IsActiveEmpty() bool {
 	return len(m.Active().Items()) == 0
 }

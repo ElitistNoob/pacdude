@@ -37,11 +37,12 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 				m.tabs.Active().SetShowFilter(true)
 				m.tabs.Active().Title = "Search Results: " + query
 
-				fn := runBackend(func() backend.ResultMsg {
+				cmds = append(cmds, runBackend(func() backend.ResultMsg {
 					return m.backend.Search(query)
-				})
+				}))
+				cmds = append(cmds, m.tabs.Active().ToggleSpinner())
 
-				return m, tea.Batch(m.tabs.Active().ToggleSpinner(), fn)
+				return m, tea.Batch(cmds...)
 			}
 			break
 		}
@@ -75,33 +76,30 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 			m.state = stateReady
 			m.tabs.Active().StopSpinner()
 			pkgs := m.backend.ParseOutput(msg.Payload.(backend.OutputMsg))
-			return m, m.setListItems(pkgs)
+			cmds = append(cmds, m.setListItems(pkgs))
 		case messages.ActionUpdatesLoaded:
 			m.tabs.Active().StopSpinner()
 			pkgs := m.backend.ParseOutput(msg.Payload.(backend.OutputMsg))
-			return m, m.setListItems(pkgs)
+			cmds = append(cmds, m.setListItems(pkgs))
 		case messages.ActionPackageInstalled:
 			m.state = stateInstalled
-			return m, nil
 		case messages.ActionUpdatedAll:
 			m.state = stateUpdated
-			return m, nil
 		case messages.ActionPackageRemoved:
 			m.state = stateRemoved
-			return m, nil
 		case messages.ActionSearchLoaded:
 			m.tabs.Active().StopSpinner()
 			m.tabs.Active().FilterInput.Focus()
 			pkgs := m.backend.ParseOutput(msg.Payload.(backend.OutputMsg))
-			return m, m.setListItems(pkgs)
+			cmds = append(cmds, m.setListItems(pkgs))
 		case messages.ActionError:
 			m.state = stateError
-			return m, nil
 		}
 	}
 
 	var cmd tea.Cmd
-	*m.tabs.Active(), cmd = m.tabs.Active().Update(msg)
+	updated, cmd := m.tabs.Active().Update(msg)
+	m.tabs.SetActive(updated)
 
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
