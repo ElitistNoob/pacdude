@@ -4,34 +4,28 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ElitistNoob/pacdude/internal/backend"
 	"github.com/ElitistNoob/pacdude/internal/tui/styles"
 )
 
 func (m *PackageBrowserModel) View() string {
 	var b strings.Builder
 	for i := range m.tabContent {
-		if i == m.activeTab {
-			b.WriteString(styles.TabActive.Render(m.tabs[i]))
-		} else {
-			b.WriteString(styles.TabInactive.Render(m.tabs[i]))
+		style := styles.TabInactive
+		if i == int(m.activeTab) {
+			style = styles.TabActive
 		}
+
+		b.WriteString(style.Render(m.tabs[i]))
 		b.WriteString(" ")
 	}
 	b.WriteString("\n\n")
-	selectedItem := m.tabContent[m.activeTab].SelectedItem()
-	var i backend.Pkg
-	if selectedItem != nil {
-		p, ok := selectedItem.(backend.Pkg)
-		if ok {
-			i = p
-		}
-	}
+
+	pkg := m.getSelectedPackage()
 	switch m.state {
 	case stateInstalled:
-		return fmt.Sprintf("%s was successfully installed", i.Name)
+		return fmt.Sprintf("%s was successfully installed\n\n[space] continue [q] quit", pkg)
 	case stateRemoved:
-		return fmt.Sprintf("%s has been uninstalled", i.Name)
+		return fmt.Sprintf("%s has been uninstalled", pkg)
 	case stateUpdated:
 		return "Packages have been updated!"
 	}
