@@ -3,10 +3,8 @@ package packagebrowser
 import (
 	"github.com/ElitistNoob/pacdude/internal/app"
 	"github.com/ElitistNoob/pacdude/internal/backend"
-	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/list"
+	t "github.com/ElitistNoob/pacdude/internal/tui/components"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 type state int
@@ -17,76 +15,26 @@ const (
 	stateInstalled
 	stateRemoved
 	stateUpdated
+	stateError
 )
 
-var docStyle = lipgloss.NewStyle().Margin(1, 2)
-
-type listKeyMap struct {
-	install          key.Binding
-	remove           key.Binding
-	updatable        key.Binding
-	updateAll        key.Binding
-	InstalledPackage key.Binding
-}
-
-func newListKeyMap() *listKeyMap {
-	return &listKeyMap{
-		install: key.NewBinding(
-			key.WithKeys("i"),
-			key.WithHelp("i", "install"),
-		),
-		InstalledPackage: key.NewBinding(
-			key.WithKeys("esc"),
-			key.WithHelp("esc", "install"),
-		),
-		remove: key.NewBinding(
-			key.WithKeys("d"),
-			key.WithHelp("d", "uninstall"),
-		),
-		updatable: key.NewBinding(
-			key.WithKeys("u"),
-			key.WithHelp("u", "show available updates"),
-		),
-		updateAll: key.NewBinding(
-			key.WithKeys("U"),
-			key.WithHelp("U", "update all packages"),
-		),
-	}
-}
-
 type PackageBrowserModel struct {
-	Backend backend.BackendInterface
+	backend backend.BackendInterface
 	state   state
-	list    list.Model
-	keys    *listKeyMap
-	error   string
+	tabs    *t.TabsModel
 	width   int
 	height  int
 }
 
 func NewModel(b backend.BackendInterface) app.Screen {
-	listKey := newListKeyMap()
-	l := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
-	l.Title = "Getting Packages"
-	l.SetShowTitle(true)
-	l.SetShowStatusBar(true)
-	l.AdditionalFullHelpKeys = func() []key.Binding {
-		return []key.Binding{
-			listKey.install,
-			listKey.remove,
-			listKey.updatable,
-			listKey.updateAll,
-			listKey.InstalledPackage,
-		}
-	}
+	t := t.NewTabsModel()
 
 	return &PackageBrowserModel{
-		Backend: b,
-		list:    l,
-		keys:    listKey,
+		backend: b,
+		tabs:    t,
 	}
 }
 
 func (m *PackageBrowserModel) Init() tea.Cmd {
-	return tea.Batch(m.list.ToggleSpinner(), m.Backend.ListInstalled())
+	return tea.Batch(m.tabs.Active().ToggleSpinner(), runBackend(m.backend.ListInstalled))
 }

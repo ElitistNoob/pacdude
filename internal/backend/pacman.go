@@ -4,63 +4,70 @@ import (
 	"os/exec"
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
+	msg "github.com/ElitistNoob/pacdude/internal/tui/messages"
 )
 
 type PacmanBackend struct{}
 
-func (p PacmanBackend) ListInstalled() tea.Cmd {
-	return func() tea.Msg {
-		cmd := exec.Command("pacman", "-Qs")
-		output, err := cmd.CombinedOutput()
-		return ListInstalledPackagesMsg{
-			Output: output,
-			Err:    ErrMsg{Err: err},
-		}
+func (p PacmanBackend) ListInstalled() ResultMsg {
+	cmd := exec.Command("pacman", "-Qs")
+	output, err := cmd.CombinedOutput()
+	return ResultMsg{
+		Output:     output,
+		Err:        ErrMsg{Err: err},
+		ActionType: resolveAction(msg.ActionInstalledLoaded, err),
 	}
 }
 
-func (p PacmanBackend) Search(query string) tea.Cmd {
-	return func() tea.Msg {
-		cmd := exec.Command("pacman", "-Ss", query)
-		output, err := cmd.CombinedOutput()
-		return SearchPacmanPackagesMsg{
-			Output: output,
-			Err:    ErrMsg{Err: err},
-		}
+func (p PacmanBackend) Search(query string) ResultMsg {
+	cmd := exec.Command("pacman", "-Ss", query)
+	output, err := cmd.CombinedOutput()
+	return ResultMsg{
+		Output:     output,
+		Err:        ErrMsg{Err: err},
+		ActionType: resolveAction(msg.ActionSearchLoaded, err),
 	}
 }
 
-func (p PacmanBackend) Install(pkg string) tea.Cmd {
-	cmd := exec.Command("sudo", "pacman", "-S", pkg)
-	return tea.ExecProcess(cmd, func(err error) tea.Msg {
-		return InstallPackageResultMsg{Err: ErrMsg{Err: err}}
-	})
-}
-
-func (p PacmanBackend) Remove(pkg string) tea.Cmd {
-	cmd := exec.Command("sudo", "pacman", "-Rns", pkg)
-	return tea.ExecProcess(cmd, func(err error) tea.Msg {
-		return RemovePackageResultMsg{Err: ErrMsg{Err: err}}
-	})
-}
-
-func (p PacmanBackend) ListUpgradable() tea.Cmd {
-	return func() tea.Msg {
-		cmd := exec.Command("checkupdates")
-		output, err := cmd.CombinedOutput()
-		return ListAvailableUpdatesMsg{
-			Output: output,
-			Err:    ErrMsg{Err: err},
-		}
+func (p PacmanBackend) Install(pkg string) ResultMsg {
+	cmd := exec.Command("sudo", "pacman", "-S", pkg, "--noconfirm", "--needed")
+	output, err := cmd.CombinedOutput()
+	return ResultMsg{
+		Output:     output,
+		Err:        ErrMsg{Err: err},
+		ActionType: resolveAction(msg.ActionPackageInstalled, err),
 	}
 }
 
-func (p PacmanBackend) UpdateAll() tea.Cmd {
+func (p PacmanBackend) Remove(pkg string) ResultMsg {
+	cmd := exec.Command("sudo", "pacman", "-Rns", pkg, "--noconfirm")
+	output, err := cmd.CombinedOutput()
+	return ResultMsg{
+		Output:     output,
+		Err:        ErrMsg{Err: err},
+		ActionType: resolveAction(msg.ActionPackageRemoved, err),
+	}
+}
+
+func (p PacmanBackend) ListUpgradable() ResultMsg {
+	cmd := exec.Command("checkupdates")
+	output, err := cmd.CombinedOutput()
+	return ResultMsg{
+		Output:     output,
+		Err:        ErrMsg{Err: err},
+		ActionType: resolveAction(msg.ActionUpdatesLoaded, err),
+	}
+}
+
+func (p PacmanBackend) UpdateAll() ResultMsg {
 	cmd := exec.Command("sudo", "pacman", "-Syu")
-	return tea.ExecProcess(cmd, func(err error) tea.Msg {
-		return UpdateAllMsg{Err: ErrMsg{Err: err}}
-	})
+	output, err := cmd.CombinedOutput()
+	return ResultMsg{
+
+		Output:     output,
+		Err:        ErrMsg{Err: err},
+		ActionType: resolveAction(msg.ActionUpdatedAll, err),
+	}
 }
 
 func (p PacmanBackend) ParseOutput(output []byte) []Pkg {
@@ -69,7 +76,7 @@ func (p PacmanBackend) ParseOutput(output []byte) []Pkg {
 
 	for i := 0; i < len(lines)-1; i += 2 {
 		title, desc := lines[i], lines[i+1]
-		pkgs = append(pkgs, Pkg{Name: title, Desc: desc})
+		pkgs = append(pkgs, Pkg{Name: title, Desc: strings.TrimSpace(desc)})
 	}
 
 	return pkgs

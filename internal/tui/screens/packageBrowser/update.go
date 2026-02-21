@@ -1,10 +1,11 @@
 package packagebrowser
 
 import (
-	"strings"
-
 	"github.com/ElitistNoob/pacdude/internal/app"
 	"github.com/ElitistNoob/pacdude/internal/backend"
+	tabs "github.com/ElitistNoob/pacdude/internal/tui/components"
+	"github.com/ElitistNoob/pacdude/internal/tui/messages"
+	"github.com/ElitistNoob/pacdude/internal/tui/styles"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
@@ -14,100 +15,93 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 
-	// Window Resize Messages
+	// WINDOW RESIZE
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		h, v := docStyle.GetFrameSize()
-		m.list.SetSize(msg.Width-v, msg.Height-h)
+		h, v := styles.DocStyle.GetFrameSize()
+		m.tabs.SetSize(msg.Width-v, msg.Height-h)
 		m.state = stateReady
 
-	// Keypress Messages
+	// NORMAL KEYS //
 	case tea.KeyMsg:
-		if m.list.FilterState() == list.Filtering {
+		if m.tabs.Active().FilterState() == list.Filtering {
 			switch msg.String() {
 			case "enter":
-				query := m.list.FilterValue()
+				query := m.tabs.Query()
 
-				m.list.FilterInput.Blur()
-				m.list.ResetFilter()
-				m.list.SetFilterState(list.Unfiltered)
-				m.list.SetShowFilter(false)
-				m.list.SetShowTitle(true)
+				m.tabs.Active().FilterInput.Blur()
+				m.tabs.Active().ResetFilter()
+				m.tabs.Active().SetFilterState(list.Unfiltered)
+				m.tabs.Active().SetShowTitle(true)
+				m.tabs.Active().SetShowFilter(true)
+				m.tabs.Active().Title = "Search Results: " + query
 
-				m.list.Title = "Search Results: " + query
+				fn := runBackend(func() backend.ResultMsg {
+					return m.backend.Search(query)
+				})
 
-				return m, tea.Batch(m.list.ToggleSpinner(), m.Backend.Search(query))
+				return m, tea.Batch(m.tabs.Active().ToggleSpinner(), fn)
 			}
 			break
 		}
+
+		// LIST KEYS //
 		switch {
-		case key.Matches(msg, m.keys.install):
-			selectedPkg := m.list.SelectedItem()
-			if selectedPkg != nil {
-				p, ok := selectedPkg.(backend.Pkg)
-				if ok {
-					return m, m.Backend.Install(strings.Split(p.Name, " ")[0])
-				}
-			}
-		case key.Matches(msg, m.keys.remove):
-			selectedPkg := m.list.SelectedItem()
-			if selectedPkg != nil {
-				p, ok := selectedPkg.(backend.Pkg)
-				if ok {
-					return m, m.Backend.Remove(strings.Split(p.Name, " ")[0])
-				}
-			}
-		case key.Matches(msg, m.keys.updatable):
-			return m, tea.Batch(m.list.ToggleSpinner(), m.Backend.ListUpgradable())
-		case key.Matches(msg, m.keys.updateAll):
-			return m, m.Backend.UpdateAll()
-		case key.Matches(msg, m.keys.InstalledPackage):
-			return m, tea.Batch(m.list.ToggleSpinner(), m.Backend.ListInstalled())
+		case key.Matches(msg, m.tabs.Keys.InstalledPackage):
+			m.tabs.Index = tabs.Installed
+			return m, runBackend(m.backend.ListInstalled)
+		case key.Matches(msg, m.tabs.Keys.Install):
+			pkg := m.getSelectedPackage()
+			return m, runBackend(func() backend.ResultMsg {
+				return m.backend.Install(pkg)
+			})
+		case key.Matches(msg, m.tabs.Keys.Updatable):
+			m.tabs.Index = tabs.Updatable
+			return m, runBackend(m.backend.ListUpgradable)
+		case key.Matches(msg, m.tabs.Keys.UpdateAll):
+			return m, runBackend(m.backend.UpdateAll)
+		case key.Matches(msg, m.tabs.Keys.Uninstall):
+			pkg := m.getSelectedPackage()
+			return m, runBackend(func() backend.ResultMsg {
+				return m.backend.Remove(pkg)
+			})
 		}
 
-	// Backend Messages
-	case backend.ListInstalledPackagesMsg:
-		m.state = stateReady
-		m.list.StopSpinner()
-		m.list.Title = "Installed Packages"
-		return m, m.setListItems(msg.Output)
-	case backend.InstallPackageResultMsg:
-		if msg.Err.Err != nil {
-			m.error = msg.Err.Err.Error()
+		// BACKEND MESSAGES //
+	case messages.ActionMsg:
+		switch msg.Type {
+		case messages.ActionInstalledLoaded:
+			m.state = stateReady
+			m.tabs.Active().StopSpinner()
+			pkgs := m.backend.ParseOutput(msg.Payload.(backend.OutputMsg))
+			return m, m.setListItems(pkgs)
+		case messages.ActionUpdatesLoaded:
+			m.tabs.Active().StopSpinner()
+			pkgs := m.backend.ParseOutput(msg.Payload.(backend.OutputMsg))
+			return m, m.setListItems(pkgs)
+		case messages.ActionPackageInstalled:
+			m.state = stateInstalled
+			return m, nil
+		case messages.ActionUpdatedAll:
+			m.state = stateUpdated
+			return m, nil
+		case messages.ActionPackageRemoved:
+			m.state = stateRemoved
+			return m, nil
+		case messages.ActionSearchLoaded:
+			m.tabs.Active().StopSpinner()
+			m.tabs.Active().FilterInput.Focus()
+			pkgs := m.backend.ParseOutput(msg.Payload.(backend.OutputMsg))
+			return m, m.setListItems(pkgs)
+		case messages.ActionError:
+			m.state = stateError
 			return m, nil
 		}
-
-		m.state = stateInstalled
-		return m, nil
-	case backend.RemovePackageResultMsg:
-		if msg.Err.Err != nil {
-			m.error = msg.Err.Err.Error()
-			return m, nil
-		}
-
-		m.state = stateRemoved
-		return m, nil
-
-	case backend.UpdateAllMsg:
-		if msg.Err.Err != nil {
-			m.error = msg.Err.Err.Error()
-			return m, nil
-		}
-		m.state = stateUpdated
-		return m, nil
-	case backend.ListAvailableUpdatesMsg:
-		m.list.Title = "Available Updates"
-		m.list.StopSpinner()
-		return m, m.setListItems(msg.Output)
-	case backend.SearchPacmanPackagesMsg:
-		m.list.StopSpinner()
-		m.list.FilterInput.Focus()
-		return m, m.setListItems(msg.Output)
 	}
 
 	var cmd tea.Cmd
-	m.list, cmd = m.list.Update(msg)
+	*m.tabs.Active(), cmd = m.tabs.Active().Update(msg)
 
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
