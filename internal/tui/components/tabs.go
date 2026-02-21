@@ -85,3 +85,15 @@ func (m *TabsModel) SetSize(w, h int) {
 func (m *TabsModel) Active() *list.Model {
 	return &m.Tabs[m.Index]
 }
+
+func (m *TabsModel) IsActiveEmpty() bool {
+	return len(m.Active().Items()) == 0
+}
+
+func (m *TabsModel) SelectedItem() list.Item {
+	return m.Active().SelectedItem()
+}
+
+func (m *TabsModel) Query() string {
+	return m.Active().FilterValue()
+}

@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
+	msg "github.com/ElitistNoob/pacdude/internal/tui/messages"
 )
 
 type BrewPackage struct {
@@ -20,60 +20,66 @@ type BrewRoot struct {
 
 type BrewBackend struct{}
 
-func (p BrewBackend) ListInstalled() tea.Cmd {
-	return func() tea.Msg {
-		cmd := exec.Command("brew", "info", "--json=v2", "--installed")
-		output, err := cmd.CombinedOutput()
-		return ListInstalledPackagesMsg{
-			Output: output,
-			Err:    ErrMsg{Err: err},
-		}
+func (p BrewBackend) ListInstalled() ResultMsg {
+	cmd := exec.Command("brew", "info", "--json=v2", "--installed")
+	output, err := cmd.CombinedOutput()
+	return ResultMsg{
+		Output:     output,
+		Err:        ErrMsg{Err: err},
+		ActionType: resolveAction(msg.ActionInstalledLoaded, err),
 	}
 }
 
-func (p BrewBackend) Search(query string) tea.Cmd {
-	return func() tea.Msg {
-		cmd := exec.Command("brew", "desc", "-s", query)
-		output, err := cmd.CombinedOutput()
-		return SearchPacmanPackagesMsg{
-			Output: output,
-			Err:    ErrMsg{Err: err},
-		}
+func (p BrewBackend) Search(query string) ResultMsg {
+	cmd := exec.Command("brew", "desc", "-s", query)
+	output, err := cmd.CombinedOutput()
+	return ResultMsg{
+		Output:     output,
+		Err:        ErrMsg{Err: err},
+		ActionType: resolveAction(msg.ActionSearchLoaded, err),
 	}
 }
 
-func (p BrewBackend) Install(pkg string) tea.Cmd {
+func (p BrewBackend) Install(pkg string) ResultMsg {
 	cmd := exec.Command("brew", "install", pkg)
-	return tea.ExecProcess(cmd, func(err error) tea.Msg {
-		return InstallPackageResultMsg{Err: ErrMsg{Err: err}}
-	})
-}
-
-func (p BrewBackend) Remove(pkg string) tea.Cmd {
-	cmd := exec.Command("brew", "uninstall", pkg)
-	return tea.ExecProcess(cmd, func(err error) tea.Msg {
-		return RemovePackageResultMsg{Err: ErrMsg{Err: err}}
-	})
-}
-
-func (p BrewBackend) ListUpgradable() tea.Cmd {
-	return func() tea.Msg {
-		_ = exec.Command("brew", "update").Run()
-
-		cmd := exec.Command("brew", "outdated", "--verbose")
-		output, err := cmd.CombinedOutput()
-		return ListAvailableUpdatesMsg{
-			Output: output,
-			Err:    ErrMsg{Err: err},
-		}
+	output, err := cmd.CombinedOutput()
+	return ResultMsg{
+		Output:     output,
+		Err:        ErrMsg{Err: err},
+		ActionType: resolveAction(msg.ActionPackageInstalled, err),
 	}
 }
 
-func (p BrewBackend) UpdateAll() tea.Cmd {
+func (p BrewBackend) Remove(pkg string) ResultMsg {
+	cmd := exec.Command("brew", "uninstall", pkg)
+	output, err := cmd.CombinedOutput()
+	return ResultMsg{
+		Output:     output,
+		Err:        ErrMsg{Err: err},
+		ActionType: resolveAction(msg.ActionPackageRemoved, err),
+	}
+}
+
+func (p BrewBackend) ListUpgradable() ResultMsg {
+	_ = exec.Command("brew", "update").Run()
+
+	cmd := exec.Command("brew", "outdated", "--verbose")
+	output, err := cmd.CombinedOutput()
+	return ResultMsg{
+		Output:     output,
+		Err:        ErrMsg{Err: err},
+		ActionType: resolveAction(msg.ActionUpdatesLoaded, err),
+	}
+}
+
+func (p BrewBackend) UpdateAll() ResultMsg {
 	cmd := exec.Command("brew", "upgrade")
-	return tea.ExecProcess(cmd, func(err error) tea.Msg {
-		return UpdateAllMsg{Err: ErrMsg{Err: err}}
-	})
+	output, err := cmd.CombinedOutput()
+	return ResultMsg{
+		Output:     output,
+		Err:        ErrMsg{Err: err},
+		ActionType: resolveAction(msg.ActionUpdatedAll, err),
+	}
 }
 
 func (p BrewBackend) ParseOutput(output []byte) []Pkg {

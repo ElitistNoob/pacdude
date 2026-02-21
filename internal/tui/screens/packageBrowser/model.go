@@ -15,13 +15,13 @@ const (
 	stateInstalled
 	stateRemoved
 	stateUpdated
+	stateError
 )
 
 type PackageBrowserModel struct {
 	backend backend.BackendInterface
 	state   state
 	tabs    *t.TabsModel
-	error   string
 	width   int
 	height  int
 }
@@ -36,5 +36,5 @@ func NewModel(b backend.BackendInterface) app.Screen {
 }
 
 func (m *PackageBrowserModel) Init() tea.Cmd {
-	return tea.Batch(m.tabs.Active().ToggleSpinner(), m.backend.ListInstalled())
+	return tea.Batch(m.tabs.Active().ToggleSpinner(), runBackend(m.backend.ListInstalled))
 }
