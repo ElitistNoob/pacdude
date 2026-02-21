@@ -9,13 +9,13 @@ import (
 
 func (m *PackageBrowserModel) View() string {
 	var b strings.Builder
-	for i := range m.tabContent {
+	for i := range m.tabs.Tabs {
 		style := styles.TabInactive
-		if i == int(m.activeTab) {
+		if i == int(m.tabs.Index) {
 			style = styles.TabActive
 		}
 
-		b.WriteString(style.Render(m.tabs[i]))
+		b.WriteString(style.Render(m.tabs.Tabs[i].Title))
 		b.WriteString(" ")
 	}
 	b.WriteString("\n\n")
@@ -30,6 +30,6 @@ func (m *PackageBrowserModel) View() string {
 		return "Packages have been updated!"
 	}
 
-	b.WriteString(m.tabContent[m.activeTab].View())
+	b.WriteString(m.tabs.Tabs[m.tabs.Index].View())
 	return b.String()
 }

@@ -10,18 +10,18 @@ import (
 
 func (m *PackageBrowserModel) setListItems(output []byte) tea.Cmd {
 	return func() tea.Msg {
-		o := m.Backend.ParseOutput(output)
+		o := m.backend.ParseOutput(output)
 		items := make([]list.Item, len(o))
 		for i, v := range o {
 			items[i] = v
 		}
-		return m.tabContent[m.activeTab].SetItems(items)
+		return m.tabs.Active().SetItems(items)
 	}
 }
 
 func (m *PackageBrowserModel) getSelectedPackage() string {
 	var pkg string
-	selectedPkg := m.tabContent[m.activeTab].SelectedItem()
+	selectedPkg := m.tabs.Active().SelectedItem()
 	p, ok := selectedPkg.(backend.Pkg)
 	if ok {
 		pkg = strings.Split(p.Name, " ")[0]
@@ -30,14 +30,13 @@ func (m *PackageBrowserModel) getSelectedPackage() string {
 }
 
 func (m *PackageBrowserModel) isCurrentListEmpty() bool {
-	return len(m.tabContent[m.activeTab].Items()) == 0
+	return len(m.tabs.Tabs[m.tabs.Index].Items()) == 0
 }
 
 func (m *PackageBrowserModel) loadPackageData(cmd tea.Cmd) tea.Cmd {
-	activeList := m.tabContent[m.activeTab]
 	if m.isCurrentListEmpty() {
 		var cmds tea.BatchMsg
-		cmds = append(cmds, activeList.ToggleSpinner())
+		cmds = append(cmds, m.tabs.Active().ToggleSpinner())
 		cmds = append(cmds, func() tea.Msg { return cmd() })
 		return tea.Batch(cmds...)
 	}

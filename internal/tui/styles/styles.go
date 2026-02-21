@@ -12,8 +12,9 @@ var TabActive = lipgloss.NewStyle().
 	Foreground(lipgloss.Color("#111111")).
 	Padding(0, 1)
 
-
 var TabInactive = lipgloss.NewStyle().
 	Background(lipgloss.Color("#111111")).
 	Foreground(lipgloss.Color("#fff")).
 	Padding(0, 1)
+
+var DocStyle = lipgloss.NewStyle().Margin(1, 2)

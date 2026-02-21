@@ -5,6 +5,8 @@ import (
 
 	"github.com/ElitistNoob/pacdude/internal/app"
 	"github.com/ElitistNoob/pacdude/internal/backend"
+	tabs "github.com/ElitistNoob/pacdude/internal/tui/components"
+	"github.com/ElitistNoob/pacdude/internal/tui/styles"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
@@ -18,54 +20,52 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		h, v := docStyle.GetFrameSize()
-		for i := range m.tabContent {
-			m.tabContent[i].SetSize(msg.Width-v, msg.Height-h)
-		}
+		h, v := styles.DocStyle.GetFrameSize()
+		m.tabs.SetSize(msg.Width-v, msg.Height-h)
 		m.state = stateReady
 
 	// NORMAL KEYS //
 	case tea.KeyMsg:
-		if m.tabContent[m.activeTab].FilterState() == list.Filtering {
+		if m.tabs.Active().FilterState() == list.Filtering {
 			switch msg.String() {
 			case "enter":
-				query := m.tabContent[m.activeTab].FilterValue()
+				query := m.tabs.Active().FilterValue()
 
-				m.tabContent[m.activeTab].FilterInput.Blur()
-				m.tabContent[m.activeTab].ResetFilter()
-				m.tabContent[m.activeTab].SetFilterState(list.Unfiltered)
-				m.tabContent[m.activeTab].SetShowFilter(true)
-				m.tabContent[m.activeTab].SetShowTitle(true)
+				m.tabs.Active().FilterInput.Blur()
+				m.tabs.Active().ResetFilter()
+				m.tabs.Active().SetFilterState(list.Unfiltered)
+				m.tabs.Active().SetShowFilter(true)
+				m.tabs.Active().SetShowTitle(true)
 
-				m.tabContent[m.activeTab].Title = "Search Results: " + query
+				m.tabs.Active().Title = "Search Results: " + query
 
-				return m, tea.Batch(m.tabContent[m.activeTab].ToggleSpinner(), m.Backend.Search(query))
+				return m, tea.Batch(m.tabs.Active().ToggleSpinner(), m.backend.Search(query))
 			}
 			break
 		}
 
 		// LIST KEYS //
 		switch {
-		case key.Matches(msg, m.keys.installedPackage):
-			m.activeTab = installed
-			return m, m.loadPackageData(m.Backend.ListInstalled())
-		case key.Matches(msg, m.keys.install):
+		case key.Matches(msg, m.tabs.Keys.InstalledPackage):
+			m.tabs.Index = tabs.Installed
+			return m, m.loadPackageData(m.backend.ListInstalled())
+		case key.Matches(msg, m.tabs.Keys.Install):
 			pkg := m.getSelectedPackage()
-			return m, m.Backend.Install(pkg)
-		case key.Matches(msg, m.keys.updatable):
-			m.activeTab = updatable
-			return m, m.loadPackageData(m.Backend.ListUpgradable())
-		case key.Matches(msg, m.keys.updateAll):
-			return m, m.Backend.UpdateAll()
-		case key.Matches(msg, m.keys.uninstall):
+			return m, m.backend.Install(pkg)
+		case key.Matches(msg, m.tabs.Keys.Updatable):
+			m.tabs.Index = tabs.Updatable
+			return m, m.loadPackageData(m.backend.ListUpgradable())
+		case key.Matches(msg, m.tabs.Keys.UpdateAll):
+			return m, m.backend.UpdateAll()
+		case key.Matches(msg, m.tabs.Keys.Uninstall):
 			pkg := m.getSelectedPackage()
-			return m, m.Backend.Remove(pkg)
+			return m, m.backend.Remove(pkg)
 		}
 
 	// BACKEND MESSAGES //
 	case backend.ListInstalledPackagesMsg:
 		m.state = stateReady
-		m.tabContent[m.activeTab].StopSpinner()
+		m.tabs.Active().StopSpinner()
 		return m, m.setListItems(msg.Output)
 	case backend.InstallPackageResultMsg:
 		if msg.Err.Err != nil {
@@ -76,7 +76,7 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 		m.state = stateInstalled
 		return m, nil
 	case backend.ListAvailableUpdatesMsg:
-		m.tabContent[m.activeTab].StopSpinner()
+		m.tabs.Active().StopSpinner()
 		return m, m.setListItems(msg.Output)
 	case backend.RemovePackageResultMsg:
 		if msg.Err.Err != nil {
@@ -95,13 +95,13 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 		m.state = stateUpdated
 		return m, nil
 	case backend.SearchPacmanPackagesMsg:
-		m.tabContent[m.activeTab].StopSpinner()
-		m.tabContent[m.activeTab].FilterInput.Focus()
+		m.tabs.Active().StopSpinner()
+		m.tabs.Active().FilterInput.Focus()
 		return m, m.setListItems(msg.Output)
 	}
 
 	var cmd tea.Cmd
-	m.tabContent[m.activeTab], cmd = m.tabContent[m.activeTab].Update(msg)
+	*m.tabs.Active(), cmd = m.tabs.Active().Update(msg)
 
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
