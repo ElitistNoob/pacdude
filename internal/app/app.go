@@ -37,8 +37,8 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Batch(initCmd, sizeCmd)
 	}
 
-	var cmd tea.Cmd
-	m.Current, cmd = m.Current.Update(msg)
+	updated, cmd := m.Current.Update(msg)
+	m.Current = updated
 	return m, cmd
 }
 
