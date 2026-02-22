@@ -5,10 +5,10 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 )
 
-type tab int
+type Tab int
 
 const (
-	Installed tab = iota
+	Installed Tab = iota
 	Updatable
 )
 
@@ -22,7 +22,7 @@ type listKeyMap struct {
 
 type TabsModel struct {
 	Tabs  []list.Model
-	Index tab
+	Index Tab
 	Keys  *listKeyMap
 }
 
@@ -30,31 +30,33 @@ func newListKeyMap() *listKeyMap {
 	return &listKeyMap{
 		InstalledPackage: key.NewBinding(
 			key.WithKeys("I"),
-			key.WithHelp("I", "show installed packages"),
 		),
 		Install: key.NewBinding(
 			key.WithKeys("enter"),
-			key.WithHelp("enter", "install"),
+			key.WithHelp("enter", "Install"),
 		),
 		Updatable: key.NewBinding(
 			key.WithKeys("U"),
-			key.WithHelp("U", "show available updates"),
+			key.WithHelp("U", "Available Updates"),
 		),
 		Uninstall: key.NewBinding(
 			key.WithKeys("d"),
-			key.WithHelp("d", "uninstall package"),
+			key.WithHelp("d", "Uninstall"),
 		),
 	}
 }
 
 func NewTabsModel() *TabsModel {
-	tabsTitles := []string{"Installed (I)", "Available Updates (U)"}
+	tabsTitles := []string{
+		"Installed (I)",
+		"Available Updates (U)",
+	}
 	tabs := make([]list.Model, len(tabsTitles))
 	listKey := newListKeyMap()
 	for i := range tabs {
 		l := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
 		l.Title = tabsTitles[i]
-		l.SetShowTitle(false)
+		l.SetShowTitle(true)
 		l.SetShowStatusBar(true)
 		l.AdditionalFullHelpKeys = func() []key.Binding {
 			return []key.Binding{
