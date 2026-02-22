@@ -2,7 +2,9 @@ package packagebrowser
 
 import (
 	"github.com/ElitistNoob/pacdude/internal/backend"
-	tabs "github.com/ElitistNoob/pacdude/internal/tui/components"
+	tabs "github.com/ElitistNoob/pacdude/internal/tui/components/tabs"
+
+	// "github.com/ElitistNoob/pacdude/internal/tui/components/textInput"
 	"github.com/ElitistNoob/pacdude/internal/tui/messages"
 	"github.com/ElitistNoob/pacdude/internal/tui/styles"
 	"github.com/charmbracelet/bubbles/key"
