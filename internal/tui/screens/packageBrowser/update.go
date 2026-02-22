@@ -20,7 +20,6 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 		cmds = append(cmds, m.reduceActions(msg))
 	}
 
-	var cmd tea.Cmd
 	updated, cmd := m.tabs.Active().Update(msg)
 	m.tabs.SetActive(updated)
 
