@@ -3,7 +3,7 @@ package packagebrowser
 import (
 	"github.com/ElitistNoob/pacdude/internal/app"
 	"github.com/ElitistNoob/pacdude/internal/backend"
-	t "github.com/ElitistNoob/pacdude/internal/tui/components"
+	t "github.com/ElitistNoob/pacdude/internal/tui/components/tabs"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
