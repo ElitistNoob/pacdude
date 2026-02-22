@@ -66,6 +66,12 @@ func (m *PackageBrowserModel) reduceKeys(msg tea.KeyMsg) tea.Cmd {
 		return runBackend(func() backend.ResultMsg {
 			return m.backend.Remove(pkg)
 		})
+
+	case key.Matches(msg, m.tabs.Keys.NextTab):
+		m.tabs.NextTab()
+
+	case key.Matches(msg, m.tabs.Keys.PrevTab):
+		m.tabs.PrevTab()
 	}
 	return nil
 }

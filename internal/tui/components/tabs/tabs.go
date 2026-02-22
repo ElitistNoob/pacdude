@@ -18,6 +18,8 @@ type listKeyMap struct {
 	Updatable        key.Binding
 	UpdateAll        key.Binding
 	Uninstall        key.Binding
+	NextTab          key.Binding
+	PrevTab          key.Binding
 }
 
 type TabsModel struct {
@@ -43,6 +45,14 @@ func newListKeyMap() *listKeyMap {
 			key.WithKeys("d"),
 			key.WithHelp("d", "Uninstall"),
 		),
+		NextTab: key.NewBinding(
+			key.WithKeys("tab"),
+			key.WithHelp("Tab", "Next Tab"),
+		),
+		PrevTab: key.NewBinding(
+			key.WithKeys("shift+tab"),
+			key.WithHelp("Shift+Tab", "Previous Tab"),
+		),
 	}
 }
 
@@ -65,6 +75,8 @@ func NewTabsModel() *TabsModel {
 				listKey.Updatable,
 				listKey.UpdateAll,
 				listKey.Uninstall,
+				listKey.NextTab,
+				listKey.PrevTab,
 			}
 		}
 
@@ -102,4 +114,15 @@ func (m *TabsModel) SelectedItem() list.Item {
 
 func (m *TabsModel) Query() string {
 	return m.Active().FilterValue()
+}
+
+
+func (m *TabsModel) NextTab() {
+	l := len(m.Tabs)
+	m.Index = Tab((int(m.Index) + 1) % l)
+}
+
+func (m *TabsModel) PrevTab() {
+	l := len(m.Tabs)
+	m.Index = Tab((int(m.Index) - 1 + l) % l)
 }
