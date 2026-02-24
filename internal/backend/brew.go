@@ -26,7 +26,17 @@ func (p BrewBackend) ListInstalled() ResultMsg {
 	return ResultMsg{
 		Output:     output,
 		Err:        ErrMsg{Err: err},
-		ActionType: resolveAction(msg.ActionInstalledLoaded, err),
+		ActionType: resolveAction(msg.ActionPackagesLoaded, err),
+	}
+}
+
+func (p BrewBackend) ListAll() ResultMsg {
+	cmd := exec.Command("brew", "info", "--json=v2", "--eval-all")
+	output, err := cmd.CombinedOutput()
+	return ResultMsg{
+		Output:     output,
+		Err:        ErrMsg{Err: err},
+		ActionType: resolveAction(msg.ActionPackagesLoaded, err),
 	}
 }
 
@@ -68,7 +78,7 @@ func (p BrewBackend) ListUpgradable() ResultMsg {
 	return ResultMsg{
 		Output:     output,
 		Err:        ErrMsg{Err: err},
-		ActionType: resolveAction(msg.ActionUpdatesLoaded, err),
+		ActionType: resolveAction(msg.ActionPackagesLoaded, err),
 	}
 }
 

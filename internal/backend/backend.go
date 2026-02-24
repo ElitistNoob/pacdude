@@ -12,8 +12,10 @@ func (p Pkg) Title() string       { return p.Name }
 func (p Pkg) Description() string { return p.Desc }
 func (p Pkg) FilterValue() string { return p.Name }
 
-type OutputMsg []byte
-type ErrMsg struct{ Err error }
+type (
+	OutputMsg []byte
+	ErrMsg    struct{ Err error }
+)
 
 type ResultMsg struct {
 	Output     OutputMsg
@@ -28,5 +30,6 @@ type BackendInterface interface {
 	Remove(pkg string) ResultMsg
 	ListUpgradable() ResultMsg
 	UpdateAll() ResultMsg
+	ListAll() ResultMsg
 	ParseOutput(output []byte) []Pkg
 }

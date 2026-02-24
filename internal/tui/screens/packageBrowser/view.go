@@ -30,6 +30,6 @@ func (m *PackageBrowserModel) View() string {
 		return "Packages have been updated!"
 	}
 
-	b.WriteString(m.tabs.Tabs[m.tabs.Index].View())
+	b.WriteString(m.tabs.Active().View())
 	return b.String()
 }

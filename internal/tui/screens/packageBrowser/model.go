@@ -36,5 +36,5 @@ func NewModel(b backend.BackendInterface) app.Screen {
 }
 
 func (m *PackageBrowserModel) Init() tea.Cmd {
-	return tea.Batch(m.tabs.Active().ToggleSpinner(), runBackend(m.backend.ListInstalled))
+	return tea.Batch(m.tabs.Active().ToggleSpinner(), runBackend(m.backend.ListAll))
 }

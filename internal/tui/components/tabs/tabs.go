@@ -1,6 +1,7 @@
 package tabs
 
 import (
+	"github.com/ElitistNoob/pacdude/internal/backend"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 )
@@ -8,18 +9,18 @@ import (
 type Tab int
 
 const (
-	Installed Tab = iota
+	ViewAll Tab = iota
+	Installed
 	Updatable
-	Search
 )
 
 type listKeyMap struct {
+	ViewAll          key.Binding
 	InstalledPackage key.Binding
 	Install          key.Binding
 	Updatable        key.Binding
 	UpdateAll        key.Binding
 	Uninstall        key.Binding
-	Search           key.Binding
 	NextTab          key.Binding
 	PrevTab          key.Binding
 	Clear            key.Binding
@@ -33,8 +34,13 @@ type TabsModel struct {
 
 func newListKeyMap() *listKeyMap {
 	return &listKeyMap{
+		ViewAll: key.NewBinding(
+			key.WithKeys("A"),
+			key.WithHelp("A", "All Packages"),
+		),
 		InstalledPackage: key.NewBinding(
 			key.WithKeys("I"),
+			key.WithHelp("I", "Installed Packages"),
 		),
 		Install: key.NewBinding(
 			key.WithKeys("enter"),
@@ -47,10 +53,6 @@ func newListKeyMap() *listKeyMap {
 		Uninstall: key.NewBinding(
 			key.WithKeys("d"),
 			key.WithHelp("d", "Uninstall"),
-		),
-		Search: key.NewBinding(
-			key.WithKeys("S"),
-			key.WithHelp("S", "Search Package"),
 		),
 		NextTab: key.NewBinding(
 			key.WithKeys("tab"),
@@ -69,25 +71,24 @@ func newListKeyMap() *listKeyMap {
 
 func NewTabsModel() *TabsModel {
 	tabsTitles := []string{
+		"All (A)",
 		"Installed (I)",
-		"Available Updates (U)",
-		"Search (S)",
+		"Updates (U)",
 	}
 	tabs := make([]list.Model, len(tabsTitles))
 	listKey := newListKeyMap()
 	for i := range tabs {
 		l := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
 		l.Title = tabsTitles[i]
-		l.SetShowTitle(true)
-		l.SetShowStatusBar(true)
+		l.SetShowTitle(false)
 		l.AdditionalFullHelpKeys = func() []key.Binding {
 			return []key.Binding{
+				listKey.ViewAll,
 				listKey.InstalledPackage,
 				listKey.Install,
 				listKey.Updatable,
 				listKey.UpdateAll,
 				listKey.Uninstall,
-				listKey.Search,
 				listKey.NextTab,
 				listKey.PrevTab,
 				listKey.Clear,
@@ -146,4 +147,32 @@ func (m *TabsModel) NextTab() {
 func (m *TabsModel) PrevTab() {
 	l := len(m.Tabs)
 	m.Index = Tab((int(m.Index) - 1 + l) % l)
+}
+
+func (m *TabsModel) OpenSearchInput() {
+	m.Active().SetFilteringEnabled(true)
+	m.Active().SetShowFilter(true)
+	m.Active().FilterInput.Prompt = "Search Packages: "
+	m.Active().SetFilterState(list.Filtering)
+	m.Active().FilterInput.Focus()
+}
+
+func (m *TabsModel) CallAction(b backend.BackendInterface) backend.ResultMsg {
+	var result backend.ResultMsg
+	switch m.Index {
+	case Installed:
+		if m.IsActiveEmpty() {
+			result = b.ListInstalled()
+		}
+	case Updatable:
+		if m.IsActiveEmpty() {
+			result = b.ListUpgradable()
+		}
+	case ViewAll:
+		if m.IsActiveEmpty() {
+			result = b.ListAll()
+		}
+	}
+
+	return result
 }

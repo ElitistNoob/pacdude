@@ -4,11 +4,9 @@ import (
 	"github.com/ElitistNoob/pacdude/internal/backend"
 	tabs "github.com/ElitistNoob/pacdude/internal/tui/components/tabs"
 
-	// "github.com/ElitistNoob/pacdude/internal/tui/components/textInput"
 	"github.com/ElitistNoob/pacdude/internal/tui/messages"
 	"github.com/ElitistNoob/pacdude/internal/tui/styles"
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -24,28 +22,11 @@ func (m *PackageBrowserModel) reduceWindowSize(msg tea.WindowSizeMsg) tea.Cmd {
 }
 
 func (m *PackageBrowserModel) reduceKeys(msg tea.KeyMsg) tea.Cmd {
-	if m.tabs.Active().FilterState() == list.Filtering {
-		switch msg.String() {
-		case "enter":
-			query := m.tabs.Query()
-
-			m.tabs.Active().FilterInput.Blur()
-			m.tabs.Active().ResetFilter()
-			m.tabs.Active().SetFilterState(list.Unfiltered)
-			m.tabs.Active().SetShowTitle(true)
-			m.tabs.Active().SetShowFilter(true)
-			m.tabs.Active().Title = "Search Results: " + query
-
-			return tea.Batch(
-				m.tabs.Active().ToggleSpinner(),
-				runBackend(func() backend.ResultMsg {
-					return m.backend.Search(query)
-				}))
-		}
-		return nil
-	}
-
 	switch {
+	case key.Matches(msg, m.tabs.Keys.ViewAll):
+		m.tabs.Index = tabs.ViewAll
+		return runBackend(m.backend.ListAll)
+
 	case key.Matches(msg, m.tabs.Keys.InstalledPackage):
 		m.tabs.Index = tabs.Installed
 		return runBackend(m.backend.ListInstalled)
@@ -71,22 +52,23 @@ func (m *PackageBrowserModel) reduceKeys(msg tea.KeyMsg) tea.Cmd {
 
 	case key.Matches(msg, m.tabs.Keys.NextTab):
 		m.tabs.NextTab()
+		return runBackend(func() backend.ResultMsg {
+			return m.tabs.CallAction(m.backend)
+		})
 
 	case key.Matches(msg, m.tabs.Keys.PrevTab):
 		m.tabs.PrevTab()
+		return runBackend(func() backend.ResultMsg {
+			return m.tabs.CallAction(m.backend)
+		})
 	}
 	return nil
 }
 
 func (m *PackageBrowserModel) reduceActions(msg messages.ActionMsg) tea.Cmd {
 	switch msg.Type {
-	case messages.ActionInstalledLoaded:
+	case messages.ActionPackagesLoaded:
 		m.state = stateReady
-		m.tabs.Active().StopSpinner()
-		pkgs := m.backend.ParseOutput(msg.Payload.(backend.OutputMsg))
-		return m.setListItems(pkgs)
-
-	case messages.ActionUpdatesLoaded:
 		m.tabs.Active().StopSpinner()
 		pkgs := m.backend.ParseOutput(msg.Payload.(backend.OutputMsg))
 		return m.setListItems(pkgs)

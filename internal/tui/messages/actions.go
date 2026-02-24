@@ -4,8 +4,7 @@ type ActionType int
 
 const (
 	ActionNone ActionType = iota
-	ActionInstalledLoaded
-	ActionUpdatesLoaded
+	ActionPackagesLoaded
 	ActionSearchLoaded
 	ActionPackageInstalled
 	ActionPackageRemoved
@@ -18,4 +17,3 @@ type ActionMsg struct {
 	Payload any
 	Err     error
 }
-

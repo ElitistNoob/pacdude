@@ -15,7 +15,17 @@ func (p PacmanBackend) ListInstalled() ResultMsg {
 	return ResultMsg{
 		Output:     output,
 		Err:        ErrMsg{Err: err},
-		ActionType: resolveAction(msg.ActionInstalledLoaded, err),
+		ActionType: resolveAction(msg.ActionPackagesLoaded, err),
+	}
+}
+
+func (p PacmanBackend) ListAll() ResultMsg {
+	cmd := exec.Command("pacman", "-Ss")
+	output, err := cmd.CombinedOutput()
+	return ResultMsg{
+		Output:     output,
+		Err:        ErrMsg{Err: err},
+		ActionType: resolveAction(msg.ActionPackagesLoaded, err),
 	}
 }
 
@@ -55,7 +65,7 @@ func (p PacmanBackend) ListUpgradable() ResultMsg {
 	return ResultMsg{
 		Output:     output,
 		Err:        ErrMsg{Err: err},
-		ActionType: resolveAction(msg.ActionUpdatesLoaded, err),
+		ActionType: resolveAction(msg.ActionPackagesLoaded, err),
 	}
 }
 
@@ -63,7 +73,6 @@ func (p PacmanBackend) UpdateAll() ResultMsg {
 	cmd := exec.Command("sudo", "pacman", "-Syu")
 	output, err := cmd.CombinedOutput()
 	return ResultMsg{
-
 		Output:     output,
 		Err:        ErrMsg{Err: err},
 		ActionType: resolveAction(msg.ActionUpdatedAll, err),

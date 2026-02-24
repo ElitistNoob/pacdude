@@ -16,7 +16,17 @@ func (p FlatpakBackend) ListInstalled() ResultMsg {
 	return ResultMsg{
 		Output:     output,
 		Err:        ErrMsg{Err: err},
-		ActionType: resolveAction(msg.ActionInstalledLoaded, err),
+		ActionType: resolveAction(msg.ActionPackagesLoaded, err),
+	}
+}
+
+func (p FlatpakBackend) ListAll() ResultMsg {
+	cmd := exec.Command("flatpak", "remote-ls", "flathub", "--columns=name,application,description")
+	output, err := cmd.CombinedOutput()
+	return ResultMsg{
+		Output:     output,
+		Err:        ErrMsg{Err: err},
+		ActionType: resolveAction(msg.ActionPackagesLoaded, err),
 	}
 }
 
@@ -60,7 +70,7 @@ func (p FlatpakBackend) ListUpgradable() ResultMsg {
 	return ResultMsg{
 		Output:     output,
 		Err:        ErrMsg{Err: err},
-		ActionType: resolveAction(msg.ActionUpdatesLoaded, err),
+		ActionType: resolveAction(msg.ActionPackagesLoaded, err),
 	}
 }
 
