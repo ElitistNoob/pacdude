@@ -10,6 +10,7 @@ type Tab int
 const (
 	Installed Tab = iota
 	Updatable
+	Search
 )
 
 type listKeyMap struct {
@@ -18,8 +19,10 @@ type listKeyMap struct {
 	Updatable        key.Binding
 	UpdateAll        key.Binding
 	Uninstall        key.Binding
+	Search           key.Binding
 	NextTab          key.Binding
 	PrevTab          key.Binding
+	Clear            key.Binding
 }
 
 type TabsModel struct {
@@ -45,6 +48,10 @@ func newListKeyMap() *listKeyMap {
 			key.WithKeys("d"),
 			key.WithHelp("d", "Uninstall"),
 		),
+		Search: key.NewBinding(
+			key.WithKeys("S"),
+			key.WithHelp("S", "Search Package"),
+		),
 		NextTab: key.NewBinding(
 			key.WithKeys("tab"),
 			key.WithHelp("Tab", "Next Tab"),
@@ -53,6 +60,10 @@ func newListKeyMap() *listKeyMap {
 			key.WithKeys("shift+tab"),
 			key.WithHelp("Shift+Tab", "Previous Tab"),
 		),
+		Clear: key.NewBinding(
+			key.WithKeys("X"),
+			key.WithHelp("X", "Clear"),
+		),
 	}
 }
 
@@ -60,6 +71,7 @@ func NewTabsModel() *TabsModel {
 	tabsTitles := []string{
 		"Installed (I)",
 		"Available Updates (U)",
+		"Search (S)",
 	}
 	tabs := make([]list.Model, len(tabsTitles))
 	listKey := newListKeyMap()
@@ -75,8 +87,10 @@ func NewTabsModel() *TabsModel {
 				listKey.Updatable,
 				listKey.UpdateAll,
 				listKey.Uninstall,
+				listKey.Search,
 				listKey.NextTab,
 				listKey.PrevTab,
+				listKey.Clear,
 			}
 		}
 
@@ -116,6 +130,13 @@ func (m *TabsModel) Query() string {
 	return m.Active().FilterValue()
 }
 
+func (m *TabsModel) ResetFilter() {
+	m.Active().ResetFilter()
+}
+
+func (m *TabsModel) ChangeFilterInput(s string) {
+	m.Active().FilterInput.Prompt = s
+}
 
 func (m *TabsModel) NextTab() {
 	l := len(m.Tabs)
