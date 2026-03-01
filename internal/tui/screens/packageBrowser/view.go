@@ -5,20 +5,11 @@ import (
 	"strings"
 
 	"github.com/ElitistNoob/pacdude/internal/tui/styles"
+	"github.com/charmbracelet/lipgloss"
 )
 
 func (m *PackageBrowserModel) View() string {
 	var b strings.Builder
-	for i := range m.tabs.Tabs {
-		style := styles.TabInactive
-		if i == int(m.tabs.Index) {
-			style = styles.TabActive
-		}
-
-		b.WriteString(style.Render(m.tabs.Tabs[i].Title))
-		b.WriteString(" ")
-	}
-	b.WriteString("\n\n")
 
 	pkg := m.getSelectedPackage()
 	switch m.state {
@@ -30,6 +21,44 @@ func (m *PackageBrowserModel) View() string {
 		return "Packages have been updated!"
 	}
 
-	b.WriteString(m.tabs.Active().View())
-	return b.String()
+	contentWidth := m.getContentWidth(styles.ListStyle)
+	b.WriteString(styles.ListStyle.
+		Width(contentWidth).
+		Render(m.tabs.Active().View()))
+	return m.RenderTabs() + b.String()
+}
+
+func (m *PackageBrowserModel) RenderTabs() string {
+	var parts []string
+
+	parts = append(parts, "╭─")
+	for i, tab := range m.tabs.Tabs {
+		if i == int(m.tabs.Index) {
+			parts = append(parts, " "+styles.TabActive.Render(tab)+" ─")
+		} else {
+			parts = append(parts, " "+styles.TabInactive.Render(tab)+" ─")
+		}
+	}
+	tabRow := lipgloss.JoinHorizontal(lipgloss.Top, parts...)
+
+	contentWidth := m.getContentWidth(styles.ListStyle)
+	rowWidth := lipgloss.Width(tabRow)
+
+	line := lipgloss.NewStyle().
+		Width(contentWidth).
+		Render(strings.Repeat(
+			"─",
+			contentWidth-rowWidth) + "─╮",
+		)
+
+	if rowWidth >= contentWidth {
+		return tabRow
+	}
+
+	return tabRow + line
+}
+
+func (m *PackageBrowserModel) getContentWidth(style lipgloss.Style) int {
+	w, _ := style.GetFrameSize()
+	return m.width - w
 }

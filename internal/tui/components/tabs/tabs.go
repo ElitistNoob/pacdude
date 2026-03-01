@@ -27,7 +27,8 @@ type listKeyMap struct {
 }
 
 type TabsModel struct {
-	Tabs  []list.Model
+	Tabs  []string
+	Lists []list.Model
 	Index Tab
 	Keys  *listKeyMap
 }
@@ -75,12 +76,12 @@ func NewTabsModel() *TabsModel {
 		"Installed (I)",
 		"Updates (U)",
 	}
-	tabs := make([]list.Model, len(tabsTitles))
+	lists := make([]list.Model, len(tabsTitles))
 	listKey := newListKeyMap()
-	for i := range tabs {
+	for i := range tabsTitles {
 		l := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
-		l.Title = tabsTitles[i]
 		l.SetShowTitle(false)
+		// l.SetShowHelp(false)
 		l.AdditionalFullHelpKeys = func() []key.Binding {
 			return []key.Binding{
 				listKey.ViewAll,
@@ -95,28 +96,29 @@ func NewTabsModel() *TabsModel {
 			}
 		}
 
-		tabs[i] = l
+		lists[i] = l
 	}
 
 	return &TabsModel{
 		Index: 0,
-		Tabs:  tabs,
+		Tabs:  tabsTitles,
+		Lists: lists,
 		Keys:  listKey,
 	}
 }
 
 func (m *TabsModel) SetSize(w, h int) {
 	for i := range m.Tabs {
-		m.Tabs[i].SetSize(w, h)
+		m.Lists[i].SetSize(w, h)
 	}
 }
 
 func (m *TabsModel) Active() *list.Model {
-	return &m.Tabs[m.Index]
+	return &m.Lists[m.Index]
 }
 
 func (m *TabsModel) SetActive(l list.Model) {
-	m.Tabs[m.Index] = l
+	m.Lists[m.Index] = l
 }
 
 func (m *TabsModel) IsActiveEmpty() bool {
