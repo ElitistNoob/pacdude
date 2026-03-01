@@ -6,7 +6,8 @@ import (
 	"os/exec"
 
 	"github.com/ElitistNoob/pacdude/internal/app"
-	backendselector "github.com/ElitistNoob/pacdude/internal/tui/screens/backendSelector"
+	"github.com/ElitistNoob/pacdude/internal/backend"
+	packagebrowser "github.com/ElitistNoob/pacdude/internal/tui/screens/packageBrowser"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -23,7 +24,7 @@ func Run() {
 	}
 
 	p := tea.NewProgram(app.AppModel{
-		Current: backendselector.NewModel(),
+		Current: packagebrowser.NewModel(backend.PacmanBackend{}, 0),
 	},
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),

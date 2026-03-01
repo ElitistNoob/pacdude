@@ -20,8 +20,9 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 		cmds = append(cmds, m.reduceActions(msg))
 	}
 
-	updated, cmd := m.tabs.Active().Update(msg)
-	m.tabs.SetActive(updated)
+	active := m.tabs.TabContent[m.tabs.Index]
+	updated, cmd := active.Update(msg)
+	m.tabs.TabContent[m.tabs.Index] = updated
 
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)

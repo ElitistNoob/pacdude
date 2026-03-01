@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	msg "github.com/ElitistNoob/pacdude/internal/tui/messages"
+	"github.com/ElitistNoob/pacdude/internal/tui/styles"
 )
 
 type PacmanBackend struct{}
@@ -85,6 +86,12 @@ func (p PacmanBackend) ParseOutput(output []byte) []Pkg {
 
 	for i := 0; i < len(lines)-1; i += 2 {
 		title, desc := lines[i], lines[i+1]
+		parts := strings.Split(title, " ")
+		if len(parts) == 3 {
+			parts[2] = styles.InstalledPackage.Render(parts[2])
+		}
+
+		title = strings.Join(parts, " ")
 		pkgs = append(pkgs, Pkg{Name: title, Desc: strings.TrimSpace(desc)})
 	}
 

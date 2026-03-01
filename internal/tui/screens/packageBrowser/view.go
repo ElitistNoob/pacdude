@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strings"
 
+	panels "github.com/ElitistNoob/pacdude/internal/tui/components"
+	"github.com/ElitistNoob/pacdude/internal/tui/components/tabs"
 	"github.com/ElitistNoob/pacdude/internal/tui/styles"
 	"github.com/charmbracelet/lipgloss"
 )
 
 func (m *PackageBrowserModel) View() string {
-	var b strings.Builder
-
 	pkg := m.getSelectedPackage()
 	switch m.state {
 	case stateInstalled:
@@ -21,19 +21,41 @@ func (m *PackageBrowserModel) View() string {
 		return "Packages have been updated!"
 	}
 
-	contentWidth := m.getContentWidth(styles.ListStyle)
-	b.WriteString(styles.ListStyle.
-		Width(contentWidth).
-		Render(m.tabs.Active().View()))
-	return m.RenderTabs() + b.String()
+	if m.state == stateReady {
+		contentW, contentH := m.getContentSize(styles.ContentStyle)
+
+		headerTabs := m.RenderTabs(m.managerTab)
+		headerContent := styles.ContentStyle.
+			Width(contentW).
+			Padding(0, 1).
+			Render(m.managerTab.Active().(*panels.TextPanel).Text)
+		headerBlock := lipgloss.JoinVertical(lipgloss.Top, headerTabs, headerContent)
+
+		bodyHeight := contentH - (lipgloss.Height(headerBlock) + 2)
+		m.tabs.Active().SetSize(contentW, bodyHeight)
+
+		bodyTabs := m.RenderTabs(m.tabs)
+		bodyContent := styles.ContentStyle.
+			Width(contentW).
+			Height(bodyHeight).
+			Render(m.tabs.Active().View())
+		bodyBlock := lipgloss.JoinVertical(lipgloss.Top, bodyTabs, bodyContent)
+
+		return lipgloss.JoinVertical(lipgloss.Top,
+			headerBlock,
+			bodyBlock,
+		)
+	}
+
+	return ""
 }
 
-func (m *PackageBrowserModel) RenderTabs() string {
+func (m *PackageBrowserModel) RenderTabs(tm *tabs.TabsModel) string {
 	var parts []string
 
 	parts = append(parts, "╭─")
-	for i, tab := range m.tabs.Tabs {
-		if i == int(m.tabs.Index) {
+	for i, tab := range tm.Tabs {
+		if i == tm.Index {
 			parts = append(parts, " "+styles.TabActive.Render(tab)+" ─")
 		} else {
 			parts = append(parts, " "+styles.TabInactive.Render(tab)+" ─")
@@ -41,24 +63,9 @@ func (m *PackageBrowserModel) RenderTabs() string {
 	}
 	tabRow := lipgloss.JoinHorizontal(lipgloss.Top, parts...)
 
-	contentWidth := m.getContentWidth(styles.ListStyle)
+	contentWidth, _ := m.getContentSize(styles.ContentStyle)
 	rowWidth := lipgloss.Width(tabRow)
+	remaining := max(contentWidth-rowWidth, 0)
 
-	line := lipgloss.NewStyle().
-		Width(contentWidth).
-		Render(strings.Repeat(
-			"─",
-			contentWidth-rowWidth) + "─╮",
-		)
-
-	if rowWidth >= contentWidth {
-		return tabRow
-	}
-
-	return tabRow + line
-}
-
-func (m *PackageBrowserModel) getContentWidth(style lipgloss.Style) int {
-	w, _ := style.GetFrameSize()
-	return m.width - w
+	return tabRow + strings.Repeat("─", remaining) + "─╮"
 }

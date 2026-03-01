@@ -15,6 +15,9 @@ var TabInactive = lipgloss.NewStyle().
 
 var DocStyle = lipgloss.NewStyle().Margin(1, 2)
 
-var ListStyle = lipgloss.NewStyle().
-	Padding(1, 1).
+var ContentStyle = lipgloss.NewStyle().
+	Padding(0, 1, 1).
 	Border(lipgloss.RoundedBorder(), false, true, true, true)
+
+var InstalledPackage = lipgloss.NewStyle().
+	Foreground(lipgloss.Color("12"))

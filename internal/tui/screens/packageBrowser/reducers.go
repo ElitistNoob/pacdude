@@ -2,8 +2,8 @@ package packagebrowser
 
 import (
 	"github.com/ElitistNoob/pacdude/internal/backend"
-	tabs "github.com/ElitistNoob/pacdude/internal/tui/components/tabs"
 
+	listpanel "github.com/ElitistNoob/pacdude/internal/tui/components"
 	"github.com/ElitistNoob/pacdude/internal/tui/messages"
 	"github.com/ElitistNoob/pacdude/internal/tui/styles"
 	"github.com/charmbracelet/bubbles/key"
@@ -22,46 +22,45 @@ func (m *PackageBrowserModel) reduceWindowSize(msg tea.WindowSizeMsg) tea.Cmd {
 }
 
 func (m *PackageBrowserModel) reduceKeys(msg tea.KeyMsg) tea.Cmd {
+	switch msg.String() {
+	}
 	switch {
-	case key.Matches(msg, m.tabs.Keys.ViewAll):
-		m.tabs.Index = tabs.ViewAll
+	case key.Matches(msg, m.keys.viewAll):
+		m.tabs.Index = 0
 		return runBackend(m.backend.ListAll)
 
-	case key.Matches(msg, m.tabs.Keys.InstalledPackage):
-		m.tabs.Index = tabs.Installed
+	case key.Matches(msg, m.keys.viewInstalled):
+		m.tabs.Index = 1
 		return runBackend(m.backend.ListInstalled)
 
-	case key.Matches(msg, m.tabs.Keys.Install):
+	case key.Matches(msg, m.keys.viewAvailableUpdates):
+		m.tabs.Index = 2
+		return runBackend(m.backend.ListUpgradable)
+
+	case key.Matches(msg, m.keys.installPackage):
 		pkg := m.getSelectedPackage()
 		return runBackend(func() backend.ResultMsg {
 			return m.backend.Install(pkg)
 		})
 
-	case key.Matches(msg, m.tabs.Keys.Updatable):
-		m.tabs.Index = tabs.Updatable
-		return runBackend(m.backend.ListUpgradable)
-
-	case key.Matches(msg, m.tabs.Keys.UpdateAll):
+	case key.Matches(msg, m.keys.updateAllPackages):
 		return runBackend(m.backend.UpdateAll)
 
-	case key.Matches(msg, m.tabs.Keys.Uninstall):
+	case key.Matches(msg, m.keys.removePackage):
 		pkg := m.getSelectedPackage()
 		return runBackend(func() backend.ResultMsg {
 			return m.backend.Remove(pkg)
 		})
 
-	case key.Matches(msg, m.tabs.Keys.NextTab):
-		m.tabs.NextTab()
-		return runBackend(func() backend.ResultMsg {
-			return m.tabs.CallAction(m.backend)
-		})
+	case key.Matches(msg, m.keys.nextTab):
+		m.managerTab.NextTab()
+		return m.setBackend(m.managerTab.Index)
 
-	case key.Matches(msg, m.tabs.Keys.PrevTab):
-		m.tabs.PrevTab()
-		return runBackend(func() backend.ResultMsg {
-			return m.tabs.CallAction(m.backend)
-		})
+	case key.Matches(msg, m.keys.prevTab):
+		m.managerTab.PrevTab()
+		return m.setBackend(m.managerTab.Index)
 	}
+
 	return nil
 }
 
@@ -69,9 +68,8 @@ func (m *PackageBrowserModel) reduceActions(msg messages.ActionMsg) tea.Cmd {
 	switch msg.Type {
 	case messages.ActionPackagesLoaded:
 		m.state = stateReady
-		m.tabs.Active().StopSpinner()
 		pkgs := m.backend.ParseOutput(msg.Payload.(backend.OutputMsg))
-		return m.setListItems(pkgs)
+		return tea.Batch(m.setListItems(pkgs), m.loadActive())
 
 	case messages.ActionPackageInstalled:
 		m.state = stateInstalled
@@ -83,8 +81,7 @@ func (m *PackageBrowserModel) reduceActions(msg messages.ActionMsg) tea.Cmd {
 		m.state = stateRemoved
 
 	case messages.ActionSearchLoaded:
-		m.tabs.Active().StopSpinner()
-		m.tabs.Active().FilterInput.Focus()
+		m.tabs.TabContent[m.tabs.Index].(*listpanel.ListPanel).List.FilterInput.Focus()
 		pkgs := m.backend.ParseOutput(msg.Payload.(backend.OutputMsg))
 		return m.setListItems(pkgs)
 
