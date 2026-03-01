@@ -2,6 +2,7 @@ package packagebrowser
 
 import (
 	"github.com/ElitistNoob/pacdude/internal/app"
+	panels "github.com/ElitistNoob/pacdude/internal/tui/components"
 	"github.com/ElitistNoob/pacdude/internal/tui/messages"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -20,8 +21,18 @@ func (m *PackageBrowserModel) Update(msg tea.Msg) (app.Screen, tea.Cmd) {
 		cmds = append(cmds, m.reduceActions(msg))
 	}
 
-	active := m.tabs.TabContent[m.tabs.Index]
+	if m.tabs.Index >= len(m.tabs.TabContent) {
+		m.tabs.Index = 0
+	}
+	active := m.tabs.Active()
+	prevIndex := m.tabs.Active().(*panels.ListPanel).List.Index()
+
 	updated, cmd := active.Update(msg)
+	newIndex := m.tabs.Active().(*panels.ListPanel).List.Index()
+
+	if newIndex != prevIndex {
+		m.onMove()
+	}
 	m.tabs.TabContent[m.tabs.Index] = updated
 
 	cmds = append(cmds, cmd)

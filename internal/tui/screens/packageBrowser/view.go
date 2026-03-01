@@ -24,7 +24,7 @@ func (m *PackageBrowserModel) View() string {
 	if m.state == stateReady {
 		contentW, contentH := m.getContentSize(styles.ContentStyle)
 
-		headerTabs := m.RenderTabs(m.managerTab)
+		headerTabs := m.RenderTabs(m.managerTab, contentW)
 		headerContent := styles.ContentStyle.
 			Width(contentW).
 			Padding(0, 1).
@@ -32,14 +32,25 @@ func (m *PackageBrowserModel) View() string {
 		headerBlock := lipgloss.JoinVertical(lipgloss.Top, headerTabs, headerContent)
 
 		bodyHeight := contentH - (lipgloss.Height(headerBlock) + 2)
-		m.tabs.Active().SetSize(contentW, bodyHeight)
+		infoWidth := contentW / 4
+		categoriesWidth := contentW - infoWidth
 
-		bodyTabs := m.RenderTabs(m.tabs)
-		bodyContent := styles.ContentStyle.
-			Width(contentW).
+		m.tabs.Active().SetSize(categoriesWidth, bodyHeight)
+
+		categoriesTabs := m.RenderTabs(m.tabs, categoriesWidth)
+		categoriesContent := styles.ContentStyle.
+			Width(categoriesWidth).
 			Height(bodyHeight).
 			Render(m.tabs.Active().View())
-		bodyBlock := lipgloss.JoinVertical(lipgloss.Top, bodyTabs, bodyContent)
+		categoriesBlock := lipgloss.JoinVertical(lipgloss.Top, categoriesTabs, categoriesContent)
+
+		infoContent := lipgloss.NewStyle().
+			Height(contentH-lipgloss.Height(headerBlock)-1).
+			Width(infoWidth).
+			Padding(1, 1).
+			Border(lipgloss.RoundedBorder()).
+			Render(m.infoPanel.Text)
+		bodyBlock := lipgloss.JoinHorizontal(lipgloss.Bottom, categoriesBlock, infoContent)
 
 		return lipgloss.JoinVertical(lipgloss.Top,
 			headerBlock,
@@ -50,7 +61,7 @@ func (m *PackageBrowserModel) View() string {
 	return ""
 }
 
-func (m *PackageBrowserModel) RenderTabs(tm *tabs.TabsModel) string {
+func (m *PackageBrowserModel) RenderTabs(tm *tabs.TabsModel, width int) string {
 	var parts []string
 
 	parts = append(parts, "╭─")
@@ -63,9 +74,8 @@ func (m *PackageBrowserModel) RenderTabs(tm *tabs.TabsModel) string {
 	}
 	tabRow := lipgloss.JoinHorizontal(lipgloss.Top, parts...)
 
-	contentWidth, _ := m.getContentSize(styles.ContentStyle)
 	rowWidth := lipgloss.Width(tabRow)
-	remaining := max(contentWidth-rowWidth, 0)
+	remaining := max(width-rowWidth, 0)
 
 	return tabRow + strings.Repeat("─", remaining) + "─╮"
 }

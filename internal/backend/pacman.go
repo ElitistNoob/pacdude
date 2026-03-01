@@ -20,6 +20,46 @@ func (p PacmanBackend) ListInstalled() ResultMsg {
 	}
 }
 
+func (p PacmanBackend) ShowInfo(pkg string) (map[string]string, error) {
+	result := make(map[string]string)
+
+	cmd := exec.Command("pacman", "-Si", pkg)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+
+	var currentkey string
+	lines := strings.SplitSeq(string(output), "\n")
+	for line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+
+		if strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
+			if currentkey != "" {
+				result[currentkey] += " " + strings.TrimSpace(line)
+			}
+			continue
+
+		}
+
+		parts := strings.SplitN(line, ":", 2)
+		if len(parts) != 2 {
+			continue
+		}
+
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
+
+		result[key] = value
+		currentkey = key
+
+	}
+
+	return result, nil
+}
+
 func (p PacmanBackend) ListAll() ResultMsg {
 	cmd := exec.Command("pacman", "-Ss")
 	output, err := cmd.CombinedOutput()

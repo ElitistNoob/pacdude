@@ -20,6 +20,22 @@ func (p FlatpakBackend) ListInstalled() ResultMsg {
 	}
 }
 
+func (p FlatpakBackend) ShowInfo(pkg string) (map[string]string, error) {
+	result := make(map[string]string)
+	cmd := exec.Command("flatpak", "info", "--columns=name,description,version", pkg)
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+
+	result["Name"] = "Coming Soon"
+	result["Reposity"] = "ElistNoob"
+	result["Version"] = "0.0.0"
+	result["Description"] = "Info not implemented for Flatpak"
+	result["Packager"] = "ElitistNoob"
+	return result, nil
+}
+
 func (p FlatpakBackend) ListAll() ResultMsg {
 	cmd := exec.Command("flatpak", "remote-ls", "flathub", "--columns=name,application,description")
 	output, err := cmd.CombinedOutput()

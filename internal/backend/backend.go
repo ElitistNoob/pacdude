@@ -8,6 +8,14 @@ type Pkg struct {
 	Name, Desc string
 }
 
+type PkgInfo struct {
+	Repository,
+	Name,
+	Version,
+	Description,
+	Packager string
+}
+
 func (p Pkg) Title() string       { return p.Name }
 func (p Pkg) Description() string { return p.Desc }
 func (p Pkg) FilterValue() string { return p.Name }
@@ -25,6 +33,7 @@ type ResultMsg struct {
 
 type BackendInterface interface {
 	ListInstalled() ResultMsg
+	ShowInfo(pkg string) (map[string]string, error)
 	Search(query string) ResultMsg
 	Install(pkg string) ResultMsg
 	Remove(pkg string) ResultMsg

@@ -30,6 +30,26 @@ func (p BrewBackend) ListInstalled() ResultMsg {
 	}
 }
 
+func (p BrewBackend) ShowInfo(pkg string) (map[string]string, error) {
+	result := make(map[string]string)
+	cmd := exec.Command("brew", "info", pkg)
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+	// return ResultMsg{
+	// 	Output:     output,
+	// 	Err:        ErrMsg{Err: err},
+	// 	ActionType: resolveAction(msg.ActionPackagesLoaded, err),
+	// }
+	result["Name"] = "Coming Soon"
+	result["Reposity"] = "ElistNoob"
+	result["Version"] = "0.0.0"
+	result["Description"] = "Info not implemented for Brew"
+	result["Packager"] = "ElitistNoob"
+	return result, nil
+}
+
 func (p BrewBackend) ListAll() ResultMsg {
 	cmd := exec.Command("brew", "info", "--json=v2", "--eval-all")
 	output, err := cmd.CombinedOutput()

@@ -35,6 +35,7 @@ type PackageBrowserModel struct {
 	state      state
 	tabs       *t.TabsModel
 	managerTab *t.TabsModel
+	infoPanel  panels.TextPanel
 	width      int
 	height     int
 	keys       browserKeyMap
@@ -115,15 +116,19 @@ func NewModel(b backend.BackendInterface, index int) app.Screen {
 		},
 	)
 
+	infoPanel := &panels.TextPanel{Text: ""}
+
 	return &PackageBrowserModel{
 		backend:    b,
 		managerTab: managersTabs,
 		tabs:       t,
+		infoPanel:  *infoPanel,
 		keys:       *newBrowserKeyMap(),
 	}
 }
 
 func (m *PackageBrowserModel) Init() tea.Cmd {
 	items := m.backend.ListAll
-	return tea.Batch(runBackend(items))
+	m.onMove()
+	return runBackend(items)
 }

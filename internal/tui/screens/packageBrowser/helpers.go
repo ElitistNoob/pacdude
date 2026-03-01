@@ -1,6 +1,7 @@
 package packagebrowser
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/ElitistNoob/pacdude/internal/app"
@@ -96,6 +97,44 @@ func (m *PackageBrowserModel) setBackend(index int) tea.Cmd {
 	return func() tea.Msg {
 		return app.ChangeScreenMsg{
 			NewScreen: newScreen,
+		}
+	}
+}
+
+func (m *PackageBrowserModel) onMove() {
+	lp, ok := m.tabs.Active().(*panels.ListPanel)
+	if ok && lp.List != nil {
+		item := lp.SelectedItem()
+		if pkg, ok := item.(backend.Pkg); ok {
+			var selectedPkg string
+			switch m.managerTab.Index {
+			case 0:
+				selectedPkg = strings.Split(strings.Split(pkg.Name, " ")[0], "/")[1]
+			case 1:
+				selectedPkg = strings.Split(pkg.Name, " ")[0]
+			case 2:
+				selectedPkg = pkg.Name
+			}
+
+			result, err := m.backend.ShowInfo(selectedPkg)
+			if err != nil {
+				m.infoPanel.Text = err.Error()
+				return
+			}
+			keyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("12"))
+			m.infoPanel.Text = fmt.Sprintf(
+				"%s : %s\n\n%s : %s\n\n%s : %s\n\n%s: %s\n\n%s : %s",
+				keyStyle.Render("Name"),
+				result["Name"],
+				keyStyle.Render("Repository"),
+				result["Repository"],
+				keyStyle.Render("Version"),
+				result["Version"],
+				keyStyle.Render("Description"),
+				result["Description"],
+				keyStyle.Render("Packager"),
+				result["Packager"],
+			)
 		}
 	}
 }
